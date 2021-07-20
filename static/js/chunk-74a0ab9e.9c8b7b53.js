@@ -1,0 +1,1 @@
+(window["webpackJsonp"]=window["webpackJsonp"]||[]).push([["chunk-74a0ab9e"],{"74d2":function(o,n,p){o.exports={colorPrimary:"#1890ff"}}}]);
