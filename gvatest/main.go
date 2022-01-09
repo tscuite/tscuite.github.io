@@ -14,6 +14,11 @@ import (
 	"google.golang.org/grpc"
 )
 
+type Login struct {
+}
+
+var LoginApp = new(Login)
+
 type Captcha struct {
 	Code int `json:"code"`
 	Data struct {
@@ -76,7 +81,7 @@ const url1 string = "http://127.0.0.1:8080/api/base/captcha"
 const url2 string = "http://127.0.0.1:8080/api/base/login"
 
 //登陆后访问地址,后期改为表格获取或数据库，或自动化接口文档
-func Map() map[string]string {
+func (login *Login) Map() map[string]string {
 	content := `{"page": 1, "pageSize": 999}`
 	countryCapitalMap := make(map[string]string)
 	countryCapitalMap["http://127.0.0.1:8080/api/authority/getAuthorityList"] = content
@@ -86,14 +91,14 @@ func Map() map[string]string {
 
 func main() {
 	for {
-		if xtoken, err := Xtoken(); err != "登录成功" {
+		if xtoken, err := LoginApp.Xtoken(); err != "登录成功" {
 			fmt.Printf("login: %v\n", err)
 		} else {
 			var Json map[string]interface{}
 			fmt.Println(xtoken)
-			for url, key := range Map() {
+			for url, key := range LoginApp.Map() {
 				//开始测试登陆后接口，目前只测post
-				body, err := AllClient(xtoken, url, key)
+				body, err := LoginApp.AllClient(xtoken, url, key)
 				if err != nil {
 					fmt.Printf("login: %v\n", err)
 				} else {
@@ -107,29 +112,29 @@ func main() {
 }
 
 //获取token
-func Xtoken() (string, string) {
-	captcha, captchaId := Ddddorc()
+func (login *Login) Xtoken() (string, string) {
+	captcha, captchaId := login.Ddddorc()
 	fmt.Println(captcha)
 	content := `{"username": "admin", "password": "123456", "captcha": "` + captcha + `", "captchaId": "` + captchaId + `"}`
-	body, err := Client(url2, content)
+	body, err := login.Client(url2, content)
 	if err != nil {
 		fmt.Printf("login: %v\n", err)
 	}
-	return JsonLogin(body).Data.Token, JsonLogin(body).Msg
+	return login.JsonLogin(body).Data.Token, login.JsonLogin(body).Msg
 }
 
 //获取验证码
-func Ddddorc() (string, string) {
+func (login *Login) Ddddorc() (string, string) {
 	content := `{}`
-	body, err := Client(url1, content)
+	body, err := login.Client(url1, content)
 	if err != nil {
 		fmt.Printf("Ddddorc: %v\n", err)
 	}
-	return Grpc(JsonCaptcha(body).Data.PicPath), JsonCaptcha(body).Data.CaptchaID
+	return login.Grpc(login.JsonCaptcha(body).Data.PicPath), login.JsonCaptcha(body).Data.CaptchaID
 }
 
 //验证码json
-func JsonCaptcha(body []byte) *Captcha {
+func (login *Login) JsonCaptcha(body []byte) *Captcha {
 	var a Captcha
 	if err := json.Unmarshal(body, &a); err != nil {
 		fmt.Printf("JsonCaptcha: %v\n", err)
@@ -138,7 +143,7 @@ func JsonCaptcha(body []byte) *Captcha {
 }
 
 //登陆的json
-func JsonLogin(body []byte) *Loginres {
+func (login *Login) JsonLogin(body []byte) *Loginres {
 	var a Loginres
 	if err := json.Unmarshal(body, &a); err != nil {
 		fmt.Printf("JsonLogin: %v\n", err)
@@ -147,7 +152,7 @@ func JsonLogin(body []byte) *Loginres {
 }
 
 //grpc获取验证码方法
-func Grpc(request string) string {
+func (login *Login) Grpc(request string) string {
 	conn, err := grpc.Dial(PORT, grpc.WithInsecure())
 	if err != nil {
 		log.Fatal("grpc连接失败!", err.Error())
@@ -164,7 +169,7 @@ func Grpc(request string) string {
 }
 
 //post登录请求方法
-func Client(url, content string) ([]byte, error) {
+func (login *Login) Client(url, content string) ([]byte, error) {
 	client := &http.Client{}
 	req, err := http.NewRequest("POST", url, strings.NewReader(content))
 	if err != nil {
@@ -182,7 +187,7 @@ func Client(url, content string) ([]byte, error) {
 }
 
 //post通用请求方法
-func AllClient(xtoken, url, content string) ([]byte, error) {
+func (login *Login) AllClient(xtoken, url, content string) ([]byte, error) {
 	client := &http.Client{}
 	req, err := http.NewRequest("POST", url, strings.NewReader(content))
 	if err != nil {
