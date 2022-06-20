@@ -1,0 +1,22 @@
+version: "2"
+services:
+  dongtai-mysql: 
+    image: registry.cn-beijing.aliyuncs.com/secnium/dongtai-mysql-saas-prod-sca:1.8.0
+    restart: always
+    ports:
+      - "3306:3306"
+    volumes:
+      - "mysql-vol:/var/lib/mysql:rw"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+  dongtai-redis:
+    image: registry.cn-beijing.aliyuncs.com/secnium/dongtai-redis-saas-prod:1.8.0
+    restart: always
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+volumes:
+  mysql-vol:

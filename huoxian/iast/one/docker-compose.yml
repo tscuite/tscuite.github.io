@@ -1,0 +1,112 @@
+version: "2"
+services:
+  dongtai-mysql: 
+    image: registry.cn-beijing.aliyuncs.com/secnium/dongtai-mysql-saas-prod-sca:1.8.0
+    restart: always
+    ports:
+      - "3306:3306"
+    volumes:
+      - "mysql-vol:/var/lib/mysql:rw"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+  dongtai-redis:
+    image: registry.cn-beijing.aliyuncs.com/secnium/dongtai-redis-saas-prod:1.8.0
+    restart: always
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+  dongtai-web:
+    image: registry.cn-beijing.aliyuncs.com/secnium/dongtai-web-saas-prod:1.8.0
+    restart: always
+    ports:
+      - "8000:80"
+    volumes:
+      - "./nginx.conf:/etc/nginx/nginx.conf"
+    depends_on:
+      - dongtai-server
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+  dongtai-server:
+    image: "registry.cn-beijing.aliyuncs.com/secnium/dongtai-server-entri:1.8.0"
+    restart: always
+    sysctls:
+      net.core.somaxconn: 1024
+    volumes:
+      - iast-vol:/tmp/logstash/
+      - ./config-tutorial.ini:/opt/dongtai/dongtai_conf/conf/config.ini
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+  dongtai-worker-task:
+    image: "registry.cn-beijing.aliyuncs.com/secnium/dongtai-server-entri:1.8.0"
+    restart: always
+    entrypoint: ["/opt/dongtai/deploy/docker/entrypoint.sh", "beat"]
+    volumes:
+      - ./config-tutorial.ini:/opt/dongtai/dongtai_conf/conf/config.ini
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+  dongtai-worker-beat:
+    image: "registry.cn-beijing.aliyuncs.com/secnium/dongtai-server-entri:1.8.0"
+    restart: always
+    entrypoint: ["/opt/dongtai/deploy/docker/entrypoint.sh", "worker-beat"]
+    volumes:
+      - ./config-tutorial.ini:/opt/dongtai/dongtai_conf/conf/config.ini
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+  dongtai-worker-high-freq:
+    image: "registry.cn-beijing.aliyuncs.com/secnium/dongtai-server-entri:1.8.0"
+    restart: always
+    entrypoint: ["/opt/dongtai/deploy/docker/entrypoint.sh", "worker-high-freq"]
+    volumes:
+      - ./config-tutorial.ini:/opt/dongtai/dongtai_conf/conf/config.ini
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+  dongtai-worker-chain:
+    image: "registry.cn-beijing.aliyuncs.com/secnium/dongtai-server-entri:1.8.0"
+    restart: always
+    entrypoint: ["/opt/dongtai/deploy/docker/entrypoint.sh", "worker-chain"]
+    volumes:
+      - ./config-tutorial.ini:/opt/dongtai/dongtai_conf/conf/config.ini
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+  dongtai-logrotate:
+    image: registry.cn-beijing.aliyuncs.com/huoxian_pub/dongtai-logrotate:1.8.0
+    restart: always
+    user: root
+    volumes:
+      - "iast-vol:/tmp/logstash/"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+  dongtai-logstash:
+    image: registry.cn-beijing.aliyuncs.com/huoxian_pub/dongtai-logstash:1.8.0
+    restart: always
+    user: root
+    environment:
+      - DATABASE=dongtai-mysql:3306/dongtai_webapi
+      - USERNAME=root
+      - PASSWORD=dongtai-iast
+    volumes:
+      - "iast-vol:/tmp/logstash/"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+volumes:
+  mysql-vol:
+  iast-vol:
