@@ -1,0 +1,64 @@
+version: "2"
+services:
+  dongtai-web:
+    image: registry.cn-beijing.aliyuncs.com/secnium/dongtai-web-saas-prod:1.8.2
+    restart: always
+    ports:
+      - "8000:80"
+    volumes:
+      - "./nginx.conf:/etc/nginx/nginx.conf"
+    depends_on:
+      - dongtai-server
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+  dongtai-server:
+    image: "registry.cn-beijing.aliyuncs.com/secnium/dongtai-server-entri:1.8.2"
+    restart: always
+    sysctls:
+      net.core.somaxconn: 1024
+    volumes:
+      - iast-vol:/tmp/logstash/
+      - ../config-tutorial.ini:/opt/dongtai/dongtai_conf/conf/config.ini
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+  dongtai-worker-report-only:
+    image: "registry.cn-beijing.aliyuncs.com/secnium/dongtai-server-entri:1.8.2"
+    restart: always
+    entrypoint: ["/opt/dongtai/deploy/docker/entrypoint.sh", "worker-report-only"]
+    volumes:
+      - iast-vol:/tmp/logstash/
+      - ./config-tutorial.ini:/opt/dongtai/dongtai_conf/conf/config.ini
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+  dongtai-logrotate:
+    image: registry.cn-beijing.aliyuncs.com/huoxian_pub/dongtai-logrotate:1.8.2
+    restart: always
+    user: root
+    volumes:
+      - "iast-vol:/tmp/logstash/"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+  dongtai-logstash:
+    image: registry.cn-beijing.aliyuncs.com/huoxian_pub/dongtai-logstash:1.8.2
+    restart: always
+    user: root
+    environment:
+      - DATABASE=dongtai-mysql:3306/dongtai_webapi
+      - USERNAME=root
+      - PASSWORD=dongtai-iast
+    volumes:
+      - "iast-vol:/tmp/logstash/"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+volumes:
+  iast-vol:
