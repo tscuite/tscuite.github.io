@@ -23,7 +23,7 @@
 </defs></svg>
 <a class="skip" href="#projects">跳到项目列表</a>
 <header class="topbar">
-  <a class="brand" href="/" aria-label="tscuite 小桌面首页"><span class="brand-mark">t.</span><span>tscuite<span class="brand-caption">小桌面</span></span></a>
+  <a class="brand" href="/" aria-label="tscuite 小桌面首页"><span class="brand-mark">t.</span><span>tscuite</span></a>
   <nav aria-label="站点导航">
     <a class="nav-active" href="/" aria-current="page">日常</a>
     <a href="https://github.com/tscuite" target="_blank" rel="noopener noreferrer">GitHub <svg class="icon small" aria-hidden="true"><use href="#i-arrow"/></svg></a>
@@ -33,12 +33,11 @@
   <button class="icon-button" id="themeToggle" aria-label="切换深色模式" title="切换深色模式"><svg class="icon" aria-hidden="true"><use href="#i-sun"/></svg></button>
 </header>
 <div class="page">
-  <div class="dateline"><time id="todayDate"></time><span>一点发现，一点生活。</span></div>
+  <div class="dateline"><time id="todayDate"></time></div>
   <main class="desktop">
     <aside class="life" aria-label="生活工具">
       <section class="meal" aria-labelledby="foodTitle">
         <div class="section-top"><h2 id="foodTitle">今天吃什么</h2><button class="icon-button" id="foodEdit" aria-label="编辑吃什么清单" title="编辑清单"><svg class="icon small" aria-hidden="true"><use href="#i-edit"/></svg></button></div>
-        <div class="meal-art" aria-hidden="true"><svg viewBox="0 0 220 110"><ellipse cx="110" cy="99" rx="63" ry="7" fill="#d9a65f" opacity=".2"/><path d="M71 21c-10-12 12-12 2-24M108 21c-10-12 12-12 2-24" transform="translate(12 5)" fill="none" stroke="#bc8242" stroke-width="2" stroke-linecap="round" opacity=".6"/><path d="m155 0-30 66m51-60-41 60" stroke="#8e5c31" stroke-width="5" stroke-linecap="round"/><path d="M55 53c0-15 25-27 55-27s55 12 55 27" fill="#fffaf0"/><ellipse cx="110" cy="53" rx="62" ry="17" fill="#28565d"/><path d="M65 50c11-19 22 12 35-4s21 11 34-5 20 9 22 13" fill="none" stroke="#f4c576" stroke-width="6" stroke-linecap="round"/><path d="M80 44c-5-14 12-22 17-13 7 13-9 19-17 13" fill="#79a584"/><ellipse cx="120" cy="48" rx="10" ry="7" fill="#ee9e73"/><path d="M48 53c5 24 21 39 42 43h40c21-4 37-19 42-43-26 15-98 15-124 0" fill="#397078"/><path d="M67 75c17 10 55 14 76 0" fill="none" stroke="#81aaa3" stroke-width="2"/><path d="M91 96h38" stroke="#28565d" stroke-width="6" stroke-linecap="round"/></svg></div>
         <div id="foodBody"><p class="food-name" id="foodName" aria-live="polite">挑一道喜欢的</p><p class="meal-hint" id="foodHint">把选择困难交给运气。</p></div>
         <button class="meal-button" id="reroll"><svg class="icon" aria-hidden="true"><use href="#i-shuffle"/></svg><span>帮我选一个</span></button>
         <p class="food-status" id="foodStatus">正在读取菜单…</p>

@@ -1,4 +1,4 @@
-import { api } from "./api.mjs";
+import { api, storeSessionToken, clearSessionToken } from "./api.mjs";
 import { LANGUAGE_COLORS, REPO_LINE, parseRepositories, normalizeFoods, chinaDate, dayNumber, addDays, dayOfWeek, restInfo, nextRest } from "./core.mjs";
 const $ = id => document.getElementById(id);
 const element = (tag, className, text) => {
@@ -143,6 +143,7 @@ $("foodForm").onsubmit = async event => {
 $("userNav").onclick = async () => {
   if (me) {
     try { await api("/api/auth/logout", { method: "POST", body: JSON.stringify({}) }); } catch { /* 会话已失效也没关系 */ }
+    clearSessionToken();
     me = null;
     renderUser();
     loadFoods();
@@ -161,7 +162,7 @@ $("registerForm").onsubmit = async event => {
   $("registerSubmit").disabled = true;
   status.textContent = "正在验证…";
   try {
-    const { user } = await api("/api/auth/register", {
+    const { user, token } = await api("/api/auth/register", {
       method: "POST",
       body: JSON.stringify({
         email: $("registerEmail").value.trim(),
@@ -170,10 +171,12 @@ $("registerForm").onsubmit = async event => {
       }),
     });
     if (!user?.email) throw new Error("注册响应异常");
+    if (token) storeSessionToken(token);
     me = user;
     renderUser();
     $("registerDialog").close();
     $("registerForm").reset();
+    $("registerStatus").textContent = "";
     loadFoods();
     toast(`欢迎，${me.name || me.email}`);
   } catch (error) {
