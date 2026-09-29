@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Memory Console</title>
+<style>
+  :root {
+    --bg: #0b0b0f;
+    --panel: #14141a;
+    --panel2: #181820;
+    --border: #26262e;
+    --fg: #e6e6ea;
+    --muted: #8a8a94;
+    --accent: #e0a63c;
+    --mem: #6ea8ff;
+    --user: #6fd08c;
+    --fail: #ff7a7a;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg); color: var(--fg);
+    font: 15px/1.6 -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+    min-height: 100vh;
+  }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 40px 20px 80px; }
+  header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 28px; }
+  .wordmark { font: 700 22px/1 var(--mono); letter-spacing: 0.12em; }
+  .wordmark span { color: var(--accent); }
+  .secret-state { font: 12px var(--mono); color: var(--muted); cursor: pointer; border: none; background: none; }
+  .secret-state:hover { color: var(--fg); }
+  .search-row { display: flex; gap: 10px; }
+  #q {
+    flex: 1; background: var(--panel); border: 1px solid var(--border);
+    color: var(--fg); padding: 12px 16px; border-radius: 8px; font-size: 15px;
+    outline: none;
+  }
+  #q:focus { border-color: var(--accent); }
+  #q::placeholder { color: #55555e; }
+  .filters { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 24px; }
+  .chip {
+    background: var(--panel); border: 1px solid var(--border); color: var(--muted);
+    padding: 5px 12px; border-radius: 999px; font-size: 13px; cursor: pointer;
+  }
+  .chip.on { color: var(--bg); background: var(--accent); border-color: var(--accent); font-weight: 600; }
+  .memories { display: grid; gap: 10px; }
+  .card {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+    padding: 14px 16px; cursor: pointer; transition: border-color .12s;
+  }
+  .card:hover { border-color: var(--accent); }
+  .card h3 { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+  .card .snippet { color: var(--muted); font-size: 14px;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .card .meta { display: flex; align-items: center; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+  .badge { font: 11px var(--mono); padding: 2px 8px; border-radius: 4px; background: var(--panel2); border: 1px solid var(--border); color: var(--muted); }
+  .badge.memory { color: var(--mem); border-color: #2a3a55; }
+  .badge.user { color: var(--user); border-color: #24452f; }
+  .badge.failure { color: var(--fail); border-color: #552a2a; }
+  .time { font: 12px var(--mono); color: var(--muted); margin-left: auto; }
+  #more {
+    display: block; width: 100%; margin-top: 16px; padding: 10px;
+    background: var(--panel); border: 1px solid var(--border); color: var(--muted);
+    border-radius: 8px; cursor: pointer; font-size: 14px;
+  }
+  #more:hover { color: var(--fg); }
+  .empty { color: var(--muted); text-align: center; padding: 60px 0; font-size: 14px; }
+  /* 抽屉 */
+  #drawer {
+    position: fixed; inset: 0; background: rgba(0,0,0,.55); display: none;
+    align-items: flex-end; justify-content: center; z-index: 10;
+  }
+  #drawer.open { display: flex; }
+  .drawer-panel {
+    width: 100%; max-width: 760px; max-height: 82vh; overflow-y: auto;
+    background: var(--panel2); border: 1px solid var(--border); border-bottom: none;
+    border-radius: 14px 14px 0 0; padding: 24px;
+  }
+  .drawer-panel h2 { font-size: 18px; margin-bottom: 10px; }
+  .drawer-panel .content { white-space: pre-wrap; word-break: break-word; font-size: 14.5px; }
+  .kv { margin-top: 18px; border-top: 1px solid var(--border); padding-top: 14px; font: 12.5px var(--mono); color: var(--muted); display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; }
+  .kv b { color: var(--fg); font-weight: 500; }
+  .drawer-close { float: right; background: none; border: none; color: var(--muted); font-size: 20px; cursor: pointer; }
+  .drawer-close:hover { color: var(--fg); }
+  #toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    background: var(--fail); color: #1a0505; padding: 8px 16px; border-radius: 8px;
+    font-size: 14px; display: none; z-index: 20; max-width: 90vw;
+  }
+  /* 初始化屏 */
+  #setup { text-align: center; padding-top: 12vh; }
+  #setup h1 { font: 700 26px var(--mono); letter-spacing: 0.12em; margin-bottom: 8px; }
+  #setup p { color: var(--muted); font-size: 14px; margin-bottom: 28px; }
+  #setup input {
+    width: min(420px, 90%); display: block; margin: 0 auto 12px;
+    background: var(--panel); border: 1px solid var(--border); color: var(--fg);
+    padding: 12px 16px; border-radius: 8px; font: 14px var(--mono); outline: none;
+  }
+  #setup input:focus { border-color: var(--accent); }
+  #setup button {
+    background: var(--accent); color: var(--bg); border: none; font-weight: 600;
+    padding: 11px 40px; border-radius: 8px; font-size: 15px; cursor: pointer;
+  }
+  .hint { color: #55555e; font-size: 12.5px; margin-top: 16px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="wordmark">MEMORY<span>_</span></div>
+    <button class="secret-state" id="secretState" title="更换密钥 / 端点"></button>
+  </header>
+
+  <div id="setup">
+    <h1>MEMORY_</h1>
+    <p>记忆库访问台 · 密钥只保存在本浏览器，签名在本地完成</p>
+    <input id="secret" type="password" placeholder="API_SECRET" autocomplete="off">
+    <input id="endpoint" type="text" value="https://memory.tscuite.workers.dev" autocomplete="off">
+    <br><br>
+    <button id="connect">连接</button>
+    <p class="hint">生产密钥在 Cloudflare：wrangler secret list 只能看到名字，值问部署的人</p>
+  </div>
+
+  <div id="app" style="display:none">
+    <div class="search-row">
+      <input id="q" placeholder="搜索记忆…（≥3 字走语义检索，/ 聚焦）" autocomplete="off">
+    </div>
+    <div class="filters" id="targetFilter"></div>
+    <div class="filters" id="horizonFilter"></div>
+    <div class="memories" id="list"></div>
+    <button id="more" style="display:none">加载更多</button>
+    <div class="empty" id="empty" style="display:none">没有匹配的记忆</div>
+  </div>
+</div>
+
+<div id="drawer"><div class="drawer-panel" id="drawerPanel"></div></div>
+<div id="toast"></div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const LS_SECRET = "mem_console_secret";
+const LS_ENDPOINT = "mem_console_endpoint";
+const EMPTY_SHA = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
+
+const TARGETS = [
+  ["", "全部"], ["memory", "memory"], ["user", "user"], ["failure", "failure"],
+];
+const HORIZONS = [
+  ["", "全部周期"], ["daily", "daily"], ["weekly", "weekly"],
+  ["monthly", "monthly"], ["permanent", "permanent"],
+];
+
+let secret = localStorage.getItem(LS_SECRET) || "";
+let endpoint = localStorage.getItem(LS_ENDPOINT) || "https://memory.tscuite.workers.dev";
+let state = { target: "", horizons: [], q: "", afterId: null, loading: false };
+
+function toast(msg) {
+  const t = $("toast");
+  t.textContent = msg; t.style.display = "block";
+  setTimeout(() => (t.style.display = "none"), 3500);
+}
+
+async function sha256Hex(str) {
+  const d = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
+  return [...new Uint8Array(d)].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+async function sign(method, pathWithQuery, body) {
+  const ts = String(Math.floor(Date.now() / 1000));
+  const nonce = crypto.randomUUID().replace(/-/g, "");
+  const canonical = `${method}\n${pathWithQuery}\n${ts}\n${nonce}\n${body ? await sha256Hex(body) : EMPTY_SHA}`;
+  const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(secret),
+    { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  const sig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(canonical));
+  return {
+    "X-Auth-Timestamp": ts,
+    "X-Auth-Nonce": nonce,
+    "X-Auth-Signature": [...new Uint8Array(sig)].map((b) => b.toString(16).padStart(2, "0")).join(""),
+  };
+}
+
+async function api(pathWithQuery, { method = "GET", body } = {}) {
+  const res = await fetch(endpoint + pathWithQuery, {
+    method, body,
+    headers: { "Content-Type": "application/json", ...(await sign(method, pathWithQuery, body)) },
+  });
+  if (res.status === 401) { throw new Error("鉴权失败：密钥不对或已过期（±300s 时间窗）"); }
+  if (!res.ok) { throw new Error(`HTTP ${res.status}`); }
+  return res.json();
+}
+
+function relTime(iso) {
+  if (!iso) return "";
+  const s = Math.max(0, (Date.now() - new Date(iso).getTime()) / 1000);
+  if (s < 60) return "刚刚";
+  if (s < 3600) return `${Math.floor(s / 60)} 分钟前`;
+  if (s < 86400) return `${Math.floor(s / 3600)} 小时前`;
+  if (s < 86400 * 30) return `${Math.floor(s / 86400)} 天前`;
+  return iso.slice(0, 10);
+}
+
+function buildQuery() {
+  const p = new URLSearchParams();
+  p.set("limit", "20");
+  p.set("namespace", "default");
+  if (state.target) p.set("target", state.target);
+  state.horizons.forEach((h) => p.append("horizon", h));
+  if (state.afterId) p.set("after_id", state.afterId);
+  if (state.q && state.q.trim().length < 3) p.set("q", state.q.trim());
+  return "?" + p.toString();
+}
+
+function cardHtml(m) {
+  const tags = (m.tags || []).slice(0, 3).map((t) => `<span class="badge">#${escapeHtml(t)}</span>`).join("");
+  const cat = m.category ? `<span class="badge">${escapeHtml(m.category)}</span>` : "";
+  return `<div class="card" data-id="${m.id}">
+    <h3>${escapeHtml(m.subject || "（无标题）")}</h3>
+    <div class="snippet">${escapeHtml(m.content || "")}</div>
+    <div class="meta">
+      <span class="badge ${m.target || ""}">${m.target || "memory"}</span>
+      <span class="badge">${escapeHtml(m.horizon || "daily")}</span>
+      ${cat}${tags}
+      <span class="time" title="${m.created_at || ""}">${relTime(m.created_at)}</span>
+    </div>
+  </div>`;
+}
+
+async function load(append) {
+  if (state.loading) return;
+  state.loading = true;
+  try {
+    let data;
+    if (state.q.trim().length >= 3) {
+      const body = JSON.stringify({
+        q: state.q.trim(), target: state.target || null,
+        horizons: state.horizons.length ? state.horizons : null, limit: 20,
+        after_id: state.afterId || null,
+      });
+      data = await api("/api/memories/query", { method: "POST", body });
+    } else {
+      data = await api("/api/memories" + buildQuery());
+    }
+    const items = data.items || [];
+    if (!append) $("list").innerHTML = "";
+    $("list").insertAdjacentHTML("beforeend", items.map(cardHtml).join(""));
+    state.afterId = data.next_after_id;
+    $("more").style.display = data.next_after_id ? "block" : "none";
+    $("empty").style.display = $("list").children.length ? "none" : "block";
+  } catch (e) {
+    toast(e.message);
+    if (!append) { $("list").innerHTML = ""; $("empty").style.display = "block"; }
+  } finally {
+    state.loading = false;
+  }
+}
+
+async function openDetail(id) {
+  try {
+    const m = await api(`/api/memories/${id}`);
+    const tags = (m.tags || []).map((t) => `#${escapeHtml(t)}`).join(" ");
+    const reason = m.failure_reason ? `<div class="kv"><b>failure_reason</b><span>${escapeHtml(m.failure_reason)}</span></div>` : "";
+    $("drawerPanel").innerHTML = `
+      <button class="drawer-close" onclick="closeDrawer()">×</button>
+      <h2>${escapeHtml(m.subject || "（无标题）")}</h2>
+      <div class="content">${escapeHtml(m.content || "")}</div>
+      <div class="kv">
+        <b>id</b><span>${m.id}</span>
+        <b>target</b><span>${m.target || "-"}</span>
+        <b>category</b><span>${m.category || "-"}</span>
+        <b>horizon</b><span>${m.horizon || "-"}</span>
+        <b>namespace</b><span>${m.namespace || "-"} / ${m.scope || "-"}</span>
+        <b>created</b><span>${m.created_at || "-"}</span>
+        <b>tags</b><span>${tags || "-"}</span>
+        ${reason}
+      </div>`;
+    $("drawer").classList.add("open");
+  } catch (e) { toast(e.message); }
+}
+function closeDrawer() { $("drawer").classList.remove("open"); }
+
+function escapeHtml(s) {
+  return String(s ?? "").replace(/[&<>"']/g, (c) =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+// 初始化屏
+function showApp() {
+  $("setup").style.display = "none";
+  $("app").style.display = "block";
+  $("secretState").textContent = endpoint.replace(/^https?:\/\//, "") + " · 更换密钥";
+  load(false);
+}
+$("connect").onclick = () => {
+  secret = $("secret").value.trim();
+  endpoint = $("endpoint").value.trim().replace(/\/$/, "");
+  if (!secret) return toast("填一下密钥");
+  localStorage.setItem(LS_SECRET, secret);
+  localStorage.setItem(LS_ENDPOINT, endpoint);
+  showApp();
+};
+$("secretState").onclick = () => {
+  localStorage.removeItem(LS_SECRET); localStorage.removeItem(LS_ENDPOINT);
+  secret = ""; $("app").style.display = "none"; $("setup").style.display = "block";
+};
+if (secret) showApp();
+
+// 筛选 chips
+function renderChips(container, options, active, key) {
+  container.innerHTML = options.map(([v, label]) =>
+    `<span class="chip ${active.includes(v) || (v === "" && active.length === 0) ? "on" : ""}" data-v="${v}">${label}</span>`).join("");
+  container.onclick = (e) => {
+    const v = e.target.dataset.v;
+    if (v === undefined) return;
+    if (key === "target") state.target = v;
+    else state.horizons = v === "" ? [] : (state.horizons.includes(v) ? state.horizons.filter((h) => h !== v) : [...state.horizons, v]);
+    renderChips($("targetFilter"), TARGETS, state.target, "target");
+    renderChips($("horizonFilter"), HORIZONS, state.horizons, "horizons");
+    state.afterId = null; load(false);
+  };
+}
+renderChips($("targetFilter"), TARGETS, state.target, "target");
+renderChips($("horizonFilter"), HORIZONS, state.horizons, "horizons");
+
+$("more").onclick = () => load(true);
+let debounce;
+$("q").oninput = () => {
+  clearTimeout(debounce);
+  debounce = setTimeout(() => { state.afterId = null; load(false); }, 350);
+};
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") closeDrawer();
+  if (e.key === "/" && document.activeElement !== $("q")) { e.preventDefault(); $("q").focus(); }
+});
+document.addEventListener("click", (e) => {
+  const card = e.target.closest(".card");
+  if (card) openDetail(card.dataset.id);
+});
+$("drawer").addEventListener("click", (e) => { if (e.target === $("drawer")) closeDrawer(); });
+</script>
+</body>
+</html>
