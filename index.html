@@ -47,7 +47,7 @@
     border-bottom: 1px solid var(--line);
   }
   .header-inner {
-    max-width: 720px; margin: 0 auto; padding: 14px 20px;
+    max-width: 1100px; margin: 0 auto; padding: 14px 24px;
     display: flex; align-items: center; justify-content: space-between;
   }
   .wordmark { font: 650 16px/1 var(--mono); letter-spacing: 0.02em; }
@@ -61,7 +61,7 @@
   nav a { color: var(--muted); text-decoration: none; font: 13px var(--mono); transition: color .15s; }
   nav a:hover { color: var(--fg); }
 
-  main { max-width: 720px; margin: 0 auto; padding: 28px 20px 72px; }
+  main { max-width: 1100px; margin: 0 auto; padding: 28px 24px 72px; }
 
   /* 仪表条：吃什么 + 周末倒计时 */
   .widgetbar {
@@ -117,6 +117,9 @@
   .panel-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 6px; }
   .panel-head h2 { font-size: 15.5px; font-weight: 650; }
   .panel-head .date { font: 12px var(--mono); color: var(--faint); }
+  .panel .repo-grid {
+    display: grid; grid-template-columns: 1fr 1fr; column-gap: 28px;
+  }
   .panel .repo {
     display: grid;
     grid-template-columns: 30px 1fr auto auto;
@@ -143,8 +146,9 @@
   }
   .expand-btn:hover { color: var(--fg); }
 
-  /* 笔记 */
-  .note { margin-bottom: 32px; }
+  /* 笔记流：宽屏两列 */
+  #feed { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 28px; align-items: start; }
+  .note { margin-bottom: 0; }
   .note-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
   .note-head .date {
     font: 12px var(--mono); color: var(--accent); letter-spacing: 0.06em;
@@ -208,7 +212,7 @@
   .empty { text-align: center; padding: 48px 0; color: var(--faint); font: 13px var(--mono); }
 
   footer {
-    max-width: 720px; margin: 0 auto; padding: 20px 20px 40px;
+    max-width: 1100px; margin: 0 auto; padding: 20px 24px 40px;
     border-top: 1px solid var(--line);
     display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap;
     color: var(--faint); font: 12px var(--mono);
@@ -253,10 +257,14 @@
     .note, .panel, .minis, .widgetbar { animation: rise .45s ease both; }
     @keyframes rise { from { opacity: 0; transform: translateY(10px); } }
   }
+  @media (max-width: 820px) {
+    .panel .repo-grid { grid-template-columns: 1fr; }
+  }
   @media (max-width: 560px) {
     .widgetbar { flex-direction: column; gap: 14px; }
     .wb-divider { width: auto; height: 1px; margin: 2px 0; }
     .minis { grid-template-columns: 1fr; }
+    #feed { grid-template-columns: 1fr; }
   }
 </style>
 </head>
@@ -644,18 +652,12 @@ function trendingHtml(item) {
     if (m) rows.push(repoRowHtml(m, ++rank));
   }
   if (!rows.length) return "";
-  const hidden = rows.slice(5).join("");
-  const visible = rows.slice(0, 5).join("");
-  const moreBtn = rows.length > 5
-    ? `<button class="expand-btn" data-expand="trendingMore">展开全部 ${rows.length} 个 ▾</button>` : "";
   return `<section class="panel" id="trendingPanel">
     <div class="panel-head">
       <h2>GitHub 每日热门</h2>
       <span class="date">${date}</span>
     </div>
-    ${visible}
-    <div id="trendingMore" style="display:none">${hidden}</div>
-    ${moreBtn}
+    <div class="repo-grid">${rows.join("")}</div>
   </section>`;
 }
 
@@ -691,13 +693,6 @@ async function load(append) {
 }
 
 $("more").onclick = () => load(true);
-document.addEventListener("click", (e) => {
-  const btn = e.target.closest("[data-expand]");
-  if (!btn) return;
-  const target = $(btn.dataset.expand);
-  target.style.display = target.style.display === "none" ? "" : "none";
-  btn.textContent = target.style.display === "none" ? `展开全部 ${btn.textContent.match(/\d+/)?.[0] ?? ""} 个 ▾` : "收起 ▴";
-});
 load(false);
 loadFoods();
 </script>
