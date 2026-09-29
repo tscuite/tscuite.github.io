@@ -62,6 +62,10 @@
           <div class="filter-list" id="targetFilter"></div>
           <div class="filter-list" id="horizonFilter"></div>
           <label class="search"><svg class="icon small" aria-hidden="true"><use href="#i-search"/></svg><input id="q" type="search" placeholder="搜索记忆…（≥3 字走语义检索，/ 聚焦）" autocomplete="off" aria-label="搜索记忆"></label>
+          <form class="feedback-row" id="feedbackForm">
+            <label class="search"><input id="feedbackInput" placeholder="纠正记忆：其实我不喝咖啡，爱喝茶…" autocomplete="off" aria-label="纠正记忆"></label>
+            <button class="primary" type="submit">纠正</button>
+          </form>
         </div>
         <div class="mem-list" id="list"></div>
         <p class="state-message" id="empty" hidden>没有匹配的记忆</p>
@@ -332,6 +336,18 @@ $("logoutBtn").onclick = async () => {
 
 $("more").onclick = () => load(true);
 $("memReload").onclick = () => load(false);
+$("feedbackForm").onsubmit = async (e) => {
+  e.preventDefault();
+  const text = $("feedbackInput").value.trim();
+  if (!text) return;
+  $("feedbackInput").value = "";
+  try {
+    await api("/api/memories/feedback", { method: "POST", body: JSON.stringify({ text, target: state.target || null }) });
+    toast("反馈已受理，稍后刷新可见");
+  } catch (err) {
+    toast(err.message);
+  }
+};
 let debounce;
 $("q").oninput = () => {
   clearTimeout(debounce);
