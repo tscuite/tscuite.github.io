@@ -1,4 +1,4 @@
-import { api, savedSecret, rememberSecret, forgetSecret } from "./api.mjs";
+import { api } from "./api.mjs";
 import { LANGUAGE_COLORS, REPO_LINE, parseRepositories, normalizeFoods, chinaDate, dayNumber, addDays, dayOfWeek, restInfo, nextRest } from "./core.mjs";
 const $ = id => document.getElementById(id);
 const element = (tag, className, text) => {
@@ -46,14 +46,28 @@ renderDate();
 let foods = ["麻辣烫", "火锅", "面条", "黄焖鸡", "饺子"];
 let foodsLoaded = false;
 let rolling = false;
+let me = null; // 登录用户：{ email, name }
+
+async function initAuth() {
+  try {
+    const { user } = await api("/api/auth/me");
+    if (user?.email) me = user;
+  } catch { me = null; }
+  renderUser();
+}
+function renderUser() {
+  const chip = $("userNav");
+  chip.textContent = me ? (me.name || me.email) : "登录";
+  chip.title = me ? `${me.email} · 点击退出` : "登录后可以定制自己的菜单";
+}
 async function loadFoods() {
   $("foodEdit").disabled = true;
   try {
-    const data = await api("/api/public/config/foods");
+    const data = me ? await api("/api/foods") : await api("/api/public/config/foods");
     if (!Array.isArray(data.foods) || !data.foods.length || data.foods.some(f => typeof f !== "string" || !f.trim())) throw new Error("菜单数据不完整");
     foods = data.foods;
     foodsLoaded = true;
-    $("foodStatus").textContent = `${foods.length} 个备选 · 菜单已同步`;
+    $("foodStatus").textContent = me ? `${foods.length} 个备选 · 你的菜单` : `${foods.length} 个备选 · 默认菜单`;
   } catch {
     foodsLoaded = false;
     $("foodStatus").textContent = "云端暂不可用，先用默认菜单";
@@ -95,22 +109,14 @@ $("reroll").onclick = () => {
   }, 70);
 };
 $("foodEdit").onclick = async () => {
+  if (!me) { $("registerDialog").showModal(); return; }
   if (!foodsLoaded) await loadFoods();
-  if (!foodsLoaded) return toast("未能读取云端清单，请稍后重试，避免覆盖已有菜单");
+  if (!foodsLoaded) return toast("未能读取云端清单，请稍后重试");
   $("foodListText").value = foods.join("\n");
-  $("secretInput").value = "";
-  $("secretInput").placeholder = savedSecret() ? "已保存密钥，留空继续使用" : "与私人记忆使用同一密钥";
   $("saveStatus").textContent = "";
   $("foodDialog").showModal();
 };
 $("foodCancel").onclick = () => $("foodDialog").close();
-$("foodDialog").addEventListener("close", () => { $("secretInput").value = ""; });
-$("forgetKey").onclick = () => {
-  forgetSecret();
-  $("secretInput").value = "";
-  $("secretInput").placeholder = "与私人记忆使用同一密钥";
-  $("saveStatus").textContent = "已清除本浏览器保存的密钥";
-};
 $("foodForm").onsubmit = async event => {
   event.preventDefault();
   if ($("foodSave").disabled) return;
@@ -118,21 +124,61 @@ $("foodForm").onsubmit = async event => {
   status.classList.remove("error");
   try {
     const next = normalizeFoods($("foodListText").value);
-    const secret = $("secretInput").value.trim() || savedSecret();
-    if (!secret) throw new Error("请输入管理密钥，才能修改公开菜单");
     $("foodSave").disabled = true;
     status.textContent = "正在保存…";
-    await api("/api/config/foods", { method: "PUT", secret, body: JSON.stringify({ foods: next }) });
-    try { rememberSecret(secret); } catch { /* Saving the menu does not require browser storage. */ }
+    await api("/api/foods", { method: "PUT", body: JSON.stringify({ foods: next }) });
     foods = next;
     $("foodName").textContent = foods[dayNumber(chinaDate()) % foods.length];
-    $("foodStatus").textContent = `${foods.length} 个备选 · 菜单已同步`;
+    $("foodStatus").textContent = `${foods.length} 个备选 · 你的菜单`;
     $("foodDialog").close();
     toast(`已保存 ${foods.length} 个选项`);
   } catch (error) {
     status.textContent = error.message;
     status.classList.add("error");
   } finally { $("foodSave").disabled = false; }
+};
+
+// ---- 登录 / 注册 / 退出（邀请码） ----
+$("userNav").onclick = async () => {
+  if (me) {
+    try { await api("/api/auth/logout", { method: "POST", body: JSON.stringify({}) }); } catch { /* 会话已失效也没关系 */ }
+    me = null;
+    renderUser();
+    loadFoods();
+    toast("已退出登录");
+  } else {
+    $("registerStatus").textContent = "";
+    $("registerDialog").showModal();
+  }
+};
+$("registerCancel").onclick = () => $("registerDialog").close();
+$("registerForm").onsubmit = async event => {
+  event.preventDefault();
+  if ($("registerSubmit").disabled) return;
+  const status = $("registerStatus");
+  status.classList.remove("error");
+  $("registerSubmit").disabled = true;
+  status.textContent = "正在验证…";
+  try {
+    const { user } = await api("/api/auth/register", {
+      method: "POST",
+      body: JSON.stringify({
+        email: $("registerEmail").value.trim(),
+        code: $("registerCode").value.trim(),
+        name: $("registerName").value.trim(),
+      }),
+    });
+    if (!user?.email) throw new Error("注册响应异常");
+    me = user;
+    renderUser();
+    $("registerDialog").close();
+    $("registerForm").reset();
+    loadFoods();
+    toast(`欢迎，${me.name || me.email}`);
+  } catch (error) {
+    status.textContent = error.message;
+    status.classList.add("error");
+  } finally { $("registerSubmit").disabled = false; }
 };
 
 let holidayYears = {};
@@ -284,4 +330,4 @@ async function loadNotes(append = false) {
 $("projectsReload").onclick = () => loadNotes();
 $("more").onclick = () => loadNotes(true);
 document.addEventListener("visibilitychange", () => { if (!document.hidden) { renderDate(); renderRest(); } });
-loadFoods(); loadHolidays(); loadWeather(); loadQuote(); loadNotes();
+loadFoods(); loadHolidays(); loadWeather(); loadQuote(); loadNotes(); initAuth();

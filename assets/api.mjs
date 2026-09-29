@@ -1,5 +1,4 @@
-export const API_ORIGIN = ["localhost", "127.0.0.1"].includes(location.hostname)
-  ? "" : "https://site-api.tscuite.workers.dev";
+export const API_ORIGIN = "https://memory.tscuite.workers.dev";
 const SECRET_KEY = "mem_console_secret";
 
 export function savedSecret() {
@@ -37,10 +36,10 @@ export async function api(path, { method = "GET", body, secret, signal } = {}) {
   if (body !== undefined) headers["Content-Type"] = "application/json";
   if (secret !== undefined) Object.assign(headers, await signatureHeaders(secret, method, path, body));
   const response = await fetch(API_ORIGIN + path, {
-    method, body, headers, credentials: "omit", redirect: "error",
+    method, body, headers, credentials: "include", redirect: "error",
     signal: signal || AbortSignal.timeout(12000),
   });
-  if (response.status === 401) throw new Error("密钥校验失败，请检查密钥及设备时间");
+  if (response.status === 401) throw new Error(secret !== undefined ? "密钥校验失败，请检查密钥及设备时间" : "请先登录");
   if (!response.ok) throw new Error(`服务暂时不可用（${response.status}），请重试`);
   return response.json();
 }

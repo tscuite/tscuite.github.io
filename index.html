@@ -29,6 +29,7 @@
     <a href="https://github.com/tscuite" target="_blank" rel="noopener noreferrer">GitHub <svg class="icon small" aria-hidden="true"><use href="#i-arrow"/></svg></a>
     <a href="/memory/">私人记忆</a>
   </nav>
+  <button class="user-chip" id="userNav">登录</button>
   <button class="icon-button" id="themeToggle" aria-label="切换深色模式" title="切换深色模式"><svg class="icon" aria-hidden="true"><use href="#i-sun"/></svg></button>
 </header>
 <div class="page">
@@ -71,12 +72,20 @@
 </div>
 <dialog id="foodDialog" aria-labelledby="foodDialogTitle">
   <form id="foodForm">
-    <div class="dialog-heading"><h2 id="foodDialogTitle">编辑吃什么清单</h2><button type="button" id="foodCancel" class="icon-button" aria-label="关闭菜单编辑">×</button></div>
+    <div class="dialog-heading"><h2 id="foodDialogTitle">编辑我的菜单</h2><button type="button" id="foodCancel" class="icon-button" aria-label="关闭菜单编辑">×</button></div>
     <label for="foodListText">想吃的都写下来</label><textarea id="foodListText" rows="9" placeholder="麻辣烫\n火锅\n面条" required></textarea>
-    <p class="field-hint">空格或换行分隔，最多 200 项，每项不超过 30 字。保存后会更新公开菜单。</p>
-    <label for="secretInput">管理密钥</label><input id="secretInput" type="password" autocomplete="off" placeholder="与私人记忆使用同一密钥">
-    <p class="field-hint" id="keyHint">只在本地计算签名。新输入的密钥仅在当前标签页会话中保留。</p>
-    <p id="saveStatus" class="form-status" role="status"></p><div class="dialog-actions"><button type="button" id="forgetKey" class="text-button">清除已保存密钥</button><button class="primary" id="foodSave" type="submit">保存到云端</button></div>
+    <p class="field-hint">空格或换行分隔，最多 200 项，每项不超过 30 字。只影响你自己的菜单。</p>
+    <p id="saveStatus" class="form-status" role="status"></p><div class="dialog-actions"><button class="primary" id="foodSave" type="submit">保存我的菜单</button></div>
+  </form>
+</dialog>
+<dialog id="registerDialog" aria-labelledby="registerDialogTitle">
+  <form id="registerForm">
+    <div class="dialog-heading"><h2 id="registerDialogTitle">登录小桌面</h2><button type="button" id="registerCancel" class="icon-button" aria-label="关闭登录窗口">×</button></div>
+    <label for="registerEmail">邮箱</label><input id="registerEmail" type="email" autocomplete="email" required placeholder="you@example.com">
+    <label for="registerCode">邀请码</label><input id="registerCode" autocomplete="off" required placeholder="8 位字母数字">
+    <label for="registerName">昵称（可选）</label><input id="registerName" autocomplete="off" placeholder="怎么称呼你">
+    <p class="field-hint">没有邀请码？找 tscuite 要一个。同一邮箱再次登录会用掉一个新的邀请码。</p>
+    <p id="registerStatus" class="form-status" role="status"></p><div class="dialog-actions"><button class="primary" id="registerSubmit" type="submit">登录 / 注册</button></div>
   </form>
 </dialog>
 <div id="toast" class="toast" role="status" hidden></div>
