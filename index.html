@@ -38,7 +38,7 @@
 
   header {
     display: flex; align-items: center; justify-content: space-between;
-    padding-bottom: 16px; border-bottom: 1px solid var(--line); margin-bottom: 40px;
+    padding-bottom: 16px; border-bottom: 1px solid var(--line); margin-bottom: 24px;
   }
   .wordmark { font: 600 17px/1 var(--mono); letter-spacing: 0.02em; }
   .wordmark em { font-style: normal; color: var(--accent); }
@@ -48,14 +48,6 @@
     transition: color .12s;
   }
   nav a:hover { color: var(--fg); }
-
-  .hero { margin-bottom: 44px; }
-  .hero h1 { font-size: 24px; font-weight: 700; letter-spacing: 0.01em; }
-  .hero p { color: var(--muted); margin-top: 8px; font-size: 14.5px; }
-
-  .section-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 6px; }
-  .section-head h2 { font-size: 15px; font-weight: 600; }
-  .section-head .count { font: 12px var(--mono); color: var(--faint); }
 
   .note { padding: 26px 0; border-bottom: 1px solid var(--line); }
   .note:last-of-type { border-bottom: none; }
@@ -134,16 +126,6 @@
     </nav>
   </header>
 
-  <section class="hero">
-    <h1>你好，我是 tscuite</h1>
-    <p>DevOps / SRE · 私有化交付。公开笔记，随手记。</p>
-  </section>
-
-  <div class="section-head">
-    <h2>笔记</h2>
-    <span class="count" id="count"></span>
-  </div>
-
   <div id="feed">
     <div class="empty" id="empty">还没有公开笔记。写一条 namespace=public 的记忆，就会出现在这里。</div>
   </div>
@@ -220,7 +202,6 @@ async function load(append) {
     $("feed").insertAdjacentHTML("beforeend", (data.items || []).map(noteHtml).join(""));
     afterId = data.next_after_id;
     const total = $("feed").querySelectorAll(".note").length;
-    $("count").textContent = total ? `共 ${total} 篇` : "";
     $("more").style.display = data.next_after_id ? "block" : "none";
     $("empty").style.display = total ? "none" : "block";
   } catch (e) {
