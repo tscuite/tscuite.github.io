@@ -26,9 +26,12 @@
 .mem-text.snippet{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .mem-meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
 .mem-meta .pill{font:11px ui-monospace,"SF Mono",Menlo,monospace;color:var(--faint);border:1px solid var(--line);border-radius:999px;padding:2px 9px}
-.mem-meta .pill.memory{color:#3572a5;border-color:#cfe0f0}
-.mem-meta .pill.user{color:#15803d;border-color:#c8e6d2}
-.mem-meta .pill.failure{color:#b91c1c;border-color:#f0cfcf}
+.mem-meta .pill.memory{color:#7aa7e8;border-color:#2a3a55}
+.mem-meta .pill.user{color:#7fc893;border-color:#24452f}
+.mem-meta .pill.failure{color:#f08a8a;border-color:#552a2a}
+:root[data-theme=light] .mem-meta .pill.memory{color:#3572a5;border-color:#cfe0f0}
+:root[data-theme=light] .mem-meta .pill.user{color:#15803d;border-color:#c8e6d2}
+:root[data-theme=light] .mem-meta .pill.failure{color:#b91c1c;border-color:#f0cfcf}
 .mem-meta .pill.plain{color:var(--muted)}
 /* 抽屉 */
 #drawer{position:fixed;inset:0;background:rgba(20,15,5,.45);display:none;align-items:flex-end;justify-content:center;z-index:30}
