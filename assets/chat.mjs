@@ -8,7 +8,24 @@ const el = (tag, className, text) => {
 };
 let socket = null;
 let me = null;
-let guestName = null;
+let unread = 0;
+
+function isOpen() { return !$("chatWindow").hidden; }
+function setUnread(n) {
+  unread = Math.max(0, n);
+  $("chatFabBadge").hidden = unread === 0;
+  $("chatFabBadge").textContent = unread > 99 ? "99+" : String(unread);
+}
+$("chatFab").onclick = () => {
+  $("chatWindow").hidden = false;
+  setUnread(0);
+  $("chatInput").focus();
+  $("chatLog").scrollTop = $("chatLog").scrollHeight;
+};
+$("chatClose").onclick = () => { $("chatWindow").hidden = true; };
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && isOpen()) { $("chatWindow").hidden = true; $("chatFab").focus(); }
+});
 
 export function updateChat(user) {
   me = user;
@@ -74,9 +91,13 @@ const fmtTime = (ts) => {
 };
 
 function renderChat(m) {
-  const row = el("div", "chat-line");
-  row.append(el("span", "chat-user", m.user), el("span", "chat-text", m.text), el("span", "chat-time", fmtTime(m.ts)));
-  addLine(row);
+  // Ask AI 风格：自己的消息右侧高亮气泡，小助手/他人左侧带名字
+  const own = me && m.user !== "小助手" && m.user === (me.name || me.email);
+  const bubble = el("div", `chat-msg${own ? " own" : ""}${m.user === "小助手" ? " assistant" : ""}`);
+  if (!own) bubble.append(el("span", "chat-user", m.user));
+  const body = el("div", "chat-bubble", m.text);
+  bubble.append(body, el("span", "chat-time", fmtTime(m.ts)));
+  addLine(bubble);
 }
 function renderSystem(text) {
   addLine(el("div", "chat-system", text));
@@ -107,7 +128,10 @@ function handle(data) {
     }
     return;
   }
-  if (data.type === "chat") renderChat(data.message);
+  if (data.type === "chat") {
+    renderChat(data.message);
+    if (!isOpen()) setUnread(unread + 1);
+  }
   if (data.type === "system") renderSystem(data.text);
   if (data.type === "presence") {
     $("chatPresence").textContent = data.count ? `在线 ${data.count} 人` : "";

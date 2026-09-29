@@ -21,6 +21,7 @@
   <symbol id="i-shuffle" viewBox="0 0 24 24"><path d="M3 5h3c5 0 7 14 12 14h3m-4-4 4 4-4 4M3 19h3c2.5 0 4-3.5 5-6m2-4c1-2.5 3-4 5-4h3m-4-4 4 4-4 4"/></symbol>
   <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 7v5h-5M4 17v-5h5M5 7a8 8 0 0 1 13-2l2 3M4 16l2 3a8 8 0 0 0 13-2"/></symbol>
   <symbol id="i-edit" viewBox="0 0 24 24"><path d="m16 3 5 5-12 12H4v-5ZM13 6l5 5"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5H4l2.5-3.2A8.5 8.5 0 1 1 21 11.5Z"/><path d="M8 12h.01M12 12h.01M16 12h.01"/></symbol>
 </defs></svg>
 <a class="skip" href="#projects">跳到项目列表</a>
 <header class="topbar">
@@ -71,30 +72,6 @@
       <section class="notes" id="notesSection" aria-label="公开笔记" hidden><div id="feed"></div></section>
       <div class="feed-actions"><p id="feedStatus" role="status"></p><button class="text-button" id="more" hidden>加载更早的笔记</button></div>
     </div>
-    <aside class="chat-side" aria-label="聊天室">
-      <section class="card chat-panel" aria-labelledby="chatTitle">
-        <div class="projects-heading">
-          <div>
-            <div class="title-line"><span class="section-symbol" aria-hidden="true">✳</span><h1 id="chatTitle">聊天室</h1></div>
-            <p id="chatStatus">连接中…</p>
-          </div>
-          <span class="quiet" id="chatPresence"></span>
-        </div>
-        <div class="chat-log" id="chatLog" aria-live="polite"></div>
-        <div class="bomb-box">
-          <div class="bomb-head"><span>💣 数字炸弹</span><span class="quiet" id="bombRange">未开局</span></div>
-          <div class="bomb-row">
-            <input id="bombGuess" type="number" min="1" max="100" placeholder="登录后可猜数" disabled aria-label="猜数字">
-            <button class="primary" id="bombStart" disabled>开局</button>
-          </div>
-          <p class="field-hint" id="bombStatus"></p>
-        </div>
-        <form class="chat-form" id="chatForm">
-          <label class="search"><input id="chatInput" placeholder="说点什么…" autocomplete="off" aria-label="聊天输入" disabled></label>
-          <button class="primary" id="chatSend" type="submit" disabled>发送</button>
-        </form>
-      </section>
-    </aside>
   </main>
   <footer><span>tscuite 的小桌面</span><span>菜单存云端 · 公开数据按需读取</span></footer>
 </div>
@@ -125,6 +102,26 @@
     <div class="dialog-actions"><button type="button" id="logoutBtn" class="text-button">退出登录</button><button class="primary" id="accountOk" type="button">知道了</button></div>
   </form>
 </dialog>
+<button class="chat-fab" id="chatFab" aria-label="打开聊天室" title="聊天室"><svg class="icon" aria-hidden="true"><use href="#i-chat"/></svg><span class="chat-fab-badge" id="chatFabBadge" hidden></span></button>
+<section class="chat-window" id="chatWindow" aria-label="聊天室" hidden>
+  <header class="chat-window-head">
+    <div class="chat-window-title"><span class="chat-spark" aria-hidden="true">✦</span><div><h2>聊天室</h2><p id="chatStatus">连接中…</p></div></div>
+    <div class="chat-window-actions"><span class="quiet" id="chatPresence"></span><button class="icon-button" id="chatClose" aria-label="关闭聊天室">×</button></div>
+  </header>
+  <div class="chat-log" id="chatLog" aria-live="polite"></div>
+  <div class="bomb-box">
+    <div class="bomb-head"><span>💣 数字炸弹</span><span class="quiet" id="bombRange">未开局</span></div>
+    <div class="bomb-row">
+      <input id="bombGuess" type="number" min="1" max="100" placeholder="登录后可猜数" disabled aria-label="猜数字">
+      <button class="primary" id="bombStart" disabled>开局</button>
+    </div>
+    <p class="field-hint" id="bombStatus"></p>
+  </div>
+  <form class="chat-form" id="chatForm">
+    <label class="search"><input id="chatInput" placeholder="说点什么…" autocomplete="off" aria-label="聊天输入" disabled></label>
+    <button class="primary" id="chatSend" type="submit" disabled>发送</button>
+  </form>
+</section>
 <div id="toast" class="toast" role="status" hidden></div>
 <noscript><p class="state-message">请启用 JavaScript 以加载笔记和小组件。</p></noscript>
 </body>
