@@ -1,4 +1,5 @@
 import { api, storeSessionToken, clearSessionToken } from "./api.mjs";
+import { updateChat } from "./chat.mjs";
 import { LANGUAGE_COLORS, REPO_LINE, parseRepositories, normalizeFoods, chinaDate, dayNumber, addDays, dayOfWeek, restInfo, nextRest } from "./core.mjs";
 const $ = id => document.getElementById(id);
 const element = (tag, className, text) => {
@@ -59,7 +60,8 @@ async function initAuth() {
 function renderUser() {
   const chip = $("userNav");
   chip.textContent = me ? (me.name || me.email) : "登录";
-  chip.title = me ? `${me.email} · 点击退出` : "登录后可以定制自己的菜单";
+  chip.title = me ? `${me.email} · 点击打开账号面板` : "登录后可以定制自己的菜单并加入聊天";
+  updateChat(me);
 }
 async function loadFoods() {
   $("foodEdit").disabled = true;

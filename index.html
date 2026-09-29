@@ -10,6 +10,7 @@
   <link rel="icon" href="/assets/mark.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/assets/desk.css">
   <script type="module" src="/assets/desk.mjs"></script>
+  <script type="module" src="/assets/chat.mjs"></script>
 </head>
 <body>
 <svg class="icon-definitions" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
@@ -69,6 +70,28 @@
       </section>
       <section class="notes" id="notesSection" aria-label="公开笔记" hidden><div id="feed"></div></section>
       <div class="feed-actions"><p id="feedStatus" role="status"></p><button class="text-button" id="more" hidden>加载更早的笔记</button></div>
+      <section class="card chat-panel" aria-labelledby="chatTitle">
+        <div class="projects-heading">
+          <div>
+            <div class="title-line"><span class="section-symbol" aria-hidden="true">✳</span><h1 id="chatTitle">聊天室</h1></div>
+            <p id="chatStatus">连接中…</p>
+          </div>
+          <span class="quiet" id="chatPresence"></span>
+        </div>
+        <div class="chat-log" id="chatLog" aria-live="polite"></div>
+        <div class="bomb-box">
+          <div class="bomb-head"><span>💣 数字炸弹</span><span class="quiet" id="bombRange">未开局</span></div>
+          <div class="bomb-row">
+            <input id="bombGuess" type="number" min="1" max="100" placeholder="登录后可猜数" disabled aria-label="猜数字">
+            <button class="primary" id="bombStart" disabled>开局</button>
+          </div>
+          <p class="field-hint" id="bombStatus"></p>
+        </div>
+        <form class="chat-form" id="chatForm">
+          <label class="search"><input id="chatInput" placeholder="说点什么…" autocomplete="off" aria-label="聊天输入" disabled></label>
+          <button class="primary" id="chatSend" type="submit" disabled>发送</button>
+        </form>
+      </section>
     </div>
   </main>
   <footer><span>tscuite 的小桌面</span><span>菜单存云端 · 公开数据按需读取</span></footer>
