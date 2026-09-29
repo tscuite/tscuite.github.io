@@ -280,21 +280,11 @@ function renderRepositories() {
   }
   $("repoGrid").replaceChildren(fragment);
   $("repoGrid").setAttribute("aria-busy", "false");
-  $("repoGrid").scrollLeft = 0;
-  updateScrollButtons();
   $("projectMessage").hidden = repos.length > 0;
   $("projectMessage").textContent = "还没有公开的项目快照。";
   $("repoCount").textContent = repos.length ? `${repos.length} 个项目 · 每日更新` : "GitHub Search API 数据快照";
 }
-// 横向滚动：左右箭头 + 边界禁用
-function updateScrollButtons() {
-  const grid = $("repoGrid");
-  $("scrollPrev").disabled = grid.scrollLeft <= 0;
-  $("scrollNext").disabled = grid.scrollLeft >= grid.scrollWidth - grid.clientWidth - 4;
-}
-$("scrollPrev").onclick = () => $("repoGrid").scrollBy({ left: -270, behavior: "smooth" });
-$("scrollNext").onclick = () => $("repoGrid").scrollBy({ left: 270, behavior: "smooth" });
-$("repoGrid").addEventListener("scroll", updateScrollButtons, { passive: true });
+function updateScrollButtons() { /* 列表模式不再需要 */ }
 function renderNote(item) {
   const article = element("article", "note");
   article.append(element("h2", "", item.subject || "未命名笔记"), element("time", "", String(item.created_at || "").slice(0, 10)));
