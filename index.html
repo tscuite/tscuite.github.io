@@ -68,26 +68,35 @@
 
   main { max-width: 680px; margin: 0 auto; padding: 32px 20px 72px; }
 
-  /* 小部件区 */
-  .widgets { display: grid; grid-template-columns: 1.4fr 1fr; gap: 12px; margin-bottom: 40px; }
-  .widget {
+  /* 仪表条：吃什么 + 周末倒计时 一体化 */
+  .widgetbar {
+    display: flex; align-items: stretch;
     background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
-    padding: 16px 18px;
+    padding: 16px 20px; margin-bottom: 40px;
   }
-  .widget .w-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
-  .widget .w-title { font: 12px var(--mono); color: var(--faint); letter-spacing: 0.04em; }
+  .wb-food {
+    flex: 1.5; min-width: 0;
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  }
+  .w-title { font: 12px var(--mono); color: var(--faint); letter-spacing: 0.04em; }
+  .wb-food .food-emoji { font-size: 24px; line-height: 1; }
+  .wb-food .food-name { font-size: 20px; font-weight: 700; letter-spacing: 0.01em; }
+  .wb-food .w-title { margin-right: auto; }
+  .wb-divider { width: 1px; background: var(--line); margin: 4px 22px; }
+  .wb-weekend { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 3px; }
+  .wb-weekend .line { display: flex; align-items: baseline; gap: 8px; }
+  .weekend-big { font: 700 24px/1 var(--mono); color: var(--accent); }
+  .weekend-unit { font-size: 13px; color: var(--muted); }
+  .weekend-sub { font: 11.5px var(--mono); color: var(--faint); }
   .w-btn {
     background: none; border: 1px solid var(--line-strong); color: var(--muted);
-    font: 11.5px var(--mono); border-radius: 7px; padding: 3px 10px; cursor: pointer;
+    font: 11.5px var(--mono); border-radius: 7px; padding: 4px 12px; cursor: pointer;
     transition: color .15s, border-color .15s;
   }
   .w-btn:hover { color: var(--fg); border-color: var(--muted); }
-  .food-body { display: flex; align-items: center; gap: 14px; min-height: 46px; }
-  .food-emoji { font-size: 30px; line-height: 1; }
-  .food-name { font-size: 19px; font-weight: 700; letter-spacing: 0.01em; }
-  .food-body.rolling .food-name { color: var(--muted); }
-  .food-body.settled { animation: pop .35s ease; }
-  @keyframes pop { 40% { transform: scale(1.05); } }
+  .wb-food.rolling .food-name { color: var(--muted); }
+  .wb-food.settled { animation: pop .35s ease; }
+  @keyframes pop { 40% { transform: scale(1.02); } }
   .temp {
     position: fixed; z-index: 30; opacity: 0; pointer-events: none;
     transition: opacity .45s ease; color: var(--muted);
@@ -95,11 +104,10 @@
   }
   .temp.show { opacity: 1; }
   .temp.hide { opacity: 0; }
-  .weekend-body { display: flex; align-items: baseline; gap: 8px; min-height: 46px; }
-  .weekend-big { font: 700 30px/1 var(--mono); color: var(--accent); }
-  .weekend-unit { font-size: 13.5px; color: var(--muted); }
-  .weekend-sub { display: block; margin-top: 6px; font: 11.5px var(--mono); color: var(--faint); }
-  @media (max-width: 520px) { .widgets { grid-template-columns: 1fr; } }
+  @media (max-width: 560px) {
+    .widgetbar { flex-direction: column; gap: 14px; }
+    .wb-divider { width: auto; height: 1px; margin: 2px 0; }
+  }
 
   .note { margin-bottom: 36px; }
   .note-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
@@ -217,20 +225,17 @@
 </header>
 
 <main>
-  <section class="widgets">
-    <div class="widget">
-      <div class="w-head">
-        <span class="w-title" id="foodTitle">今天吃什么</span>
-        <button class="w-btn" id="reroll">换一个</button>
-      </div>
-      <div class="food-body" id="foodBody">
-        <span class="food-emoji">🍚</span>
-        <span class="food-name" id="foodName">……</span>
-      </div>
+  <section class="widgetbar">
+    <div class="wb-food" id="foodBody">
+      <span class="w-title" id="foodTitle">今天吃什么</span>
+      <span class="food-emoji">🍚</span>
+      <span class="food-name" id="foodName">……</span>
+      <button class="w-btn" id="reroll">换一个</button>
     </div>
-    <div class="widget">
-      <div class="w-head"><span class="w-title">周末倒计时</span></div>
-      <div class="weekend-body">
+    <div class="wb-divider"></div>
+    <div class="wb-weekend">
+      <span class="w-title">周末倒计时</span>
+      <div class="line">
         <span class="weekend-big" id="weekendDays">-</span>
         <span class="weekend-unit" id="weekendUnit"></span>
       </div>
