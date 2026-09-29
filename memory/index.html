@@ -1,157 +1,71 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Memory</title>
-<style>
-  :root {
-    --bg: #0b0b0f;
-    --panel: #14141a;
-    --panel2: #181820;
-    --border: #26262e;
-    --fg: #e6e6ea;
-    --muted: #8a8a94;
-    --accent: #e0a63c;
-    --mem: #6ea8ff;
-    --user: #6fd08c;
-    --fail: #ff7a7a;
-    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-  }
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body {
-    background: var(--bg); color: var(--fg);
-    font: 15px/1.6 -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
-    min-height: 100vh;
-  }
-  .wrap { max-width: 760px; margin: 0 auto; padding: 40px 20px 80px; }
-  header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 28px; gap: 12px; flex-wrap: wrap; }
-  .wordmark { font: 700 22px/1 var(--mono); letter-spacing: 0.12em; }
-  .wordmark span { color: var(--accent); }
-  .header-actions { display: flex; align-items: center; gap: 14px; }
-  .back-link { font: 12px var(--mono); color: var(--muted); text-decoration: none; }
-  .back-link:hover { color: var(--fg); }
-  .secret-state { font: 12px var(--mono); color: var(--muted); cursor: pointer; border: none; background: none; }
-  .secret-state:hover { color: var(--fg); }
-  .mode-banner { font: 12px var(--mono); color: var(--muted); border: 1px dashed var(--border); border-radius: 8px; padding: 8px 14px; margin-bottom: 18px; }
-  .search-row { display: flex; gap: 10px; }
-  #q {
-    flex: 1; background: var(--panel); border: 1px solid var(--border);
-    color: var(--fg); padding: 12px 16px; border-radius: 8px; font-size: 15px;
-    outline: none;
-  }
-  #q:focus { border-color: var(--accent); }
-  #q::placeholder { color: #55555e; }
-  .filters { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 24px; }
-  .chip {
-    background: var(--panel); border: 1px solid var(--border); color: var(--muted);
-    padding: 5px 12px; border-radius: 999px; font-size: 13px; cursor: pointer;
-  }
-  .chip.on { color: var(--bg); background: var(--accent); border-color: var(--accent); font-weight: 600; }
-  .memories { display: grid; gap: 10px; }
-  .card {
-    background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
-    padding: 14px 16px; transition: border-color .12s;
-  }
-  .card.clickable { cursor: pointer; }
-  .card.clickable:hover { border-color: var(--accent); }
-  .card h3 { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
-  .card .snippet { color: var(--muted); font-size: 14px; white-space: pre-wrap; word-break: break-word;
-    display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-  .card .full { color: var(--fg); font-size: 14px; white-space: pre-wrap; word-break: break-word; }
-  .card .meta { display: flex; align-items: center; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
-  .badge { font: 11px var(--mono); padding: 2px 8px; border-radius: 4px; background: var(--panel2); border: 1px solid var(--border); color: var(--muted); }
-  .badge.memory { color: var(--mem); border-color: #2a3a55; }
-  .badge.user { color: var(--user); border-color: #24452f; }
-  .badge.failure { color: var(--fail); border-color: #552a2a; }
-  .time { font: 12px var(--mono); color: var(--muted); margin-left: auto; }
-  #more {
-    display: block; width: 100%; margin-top: 16px; padding: 10px;
-    background: var(--panel); border: 1px solid var(--border); color: var(--muted);
-    border-radius: 8px; cursor: pointer; font-size: 14px;
-  }
-  #more:hover { color: var(--fg); }
-  .empty { color: var(--muted); text-align: center; padding: 60px 0; font-size: 14px; }
-  /* 抽屉 */
-  #drawer {
-    position: fixed; inset: 0; background: rgba(0,0,0,.55); display: none;
-    align-items: flex-end; justify-content: center; z-index: 10;
-  }
-  #drawer.open { display: flex; }
-  .drawer-panel {
-    width: 100%; max-width: 760px; max-height: 82vh; overflow-y: auto;
-    background: var(--panel2); border: 1px solid var(--border); border-bottom: none;
-    border-radius: 14px 14px 0 0; padding: 24px;
-  }
-  .drawer-panel h2 { font-size: 18px; margin-bottom: 10px; }
-  .drawer-panel .content { white-space: pre-wrap; word-break: break-word; font-size: 14.5px; }
-  .kv { margin-top: 18px; border-top: 1px solid var(--border); padding-top: 14px; font: 12.5px var(--mono); color: var(--muted); display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; }
-  .kv b { color: var(--fg); font-weight: 500; }
-  .drawer-close { float: right; background: none; border: none; color: var(--muted); font-size: 20px; cursor: pointer; }
-  .drawer-close:hover { color: var(--fg); }
-  #toast {
-    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
-    background: var(--fail); color: #1a0505; padding: 8px 16px; border-radius: 8px;
-    font-size: 14px; display: none; z-index: 20; max-width: 90vw;
-  }
-  /* 登录屏 */
-  #setup { text-align: center; padding-top: 12vh; }
-  #setup h1 { font: 700 26px var(--mono); letter-spacing: 0.12em; margin-bottom: 8px; }
-  #setup p { color: var(--muted); font-size: 14px; margin-bottom: 28px; }
-  #setup label { display: block; font: 12px var(--mono); color: var(--muted); margin: 10px auto 4px; width: min(420px, 90%); text-align: left; }
-  #setup input {
-    width: min(420px, 90%); display: block; margin: 0 auto;
-    background: var(--panel); border: 1px solid var(--border); color: var(--fg);
-    padding: 12px 16px; border-radius: 8px; font: 14px var(--mono); outline: none;
-  }
-  #setup input:focus { border-color: var(--accent); }
-  #setup button {
-    background: var(--accent); color: var(--bg); border: none; font-weight: 600;
-    padding: 11px 40px; border-radius: 8px; font-size: 15px; cursor: pointer;
-    margin-top: 20px;
-  }
-  .hint { color: #55555e; font-size: 12.5px; margin-top: 16px; }
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>记忆 · tscuite</title>
+  <script>try { document.documentElement.dataset.theme = localStorage.getItem('desk-theme') || 'light'; } catch { document.documentElement.dataset.theme = 'light'; }</script>
+  <link rel="icon" href="/assets/mark.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/assets/desk.css">
+  <link rel="stylesheet" href="/assets/memory.css">
 </head>
 <body>
-<div class="wrap">
-  <header>
-    <div class="wordmark">MEMORY<span>_</span></div>
-    <div class="header-actions">
-      <a class="back-link" href="/">返回小桌面</a>
-      <button class="secret-state" id="secretState" title="退出登录"></button>
-    </div>
-  </header>
-
+<svg class="icon-definitions" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M6 18 18 6M6 6h12v12"/></symbol>
+</defs></svg>
+<header class="topbar">
+  <a class="brand" href="/" aria-label="回到小桌面"><span class="brand-mark">t.</span><span>tscuite</span></a>
+  <nav aria-label="站点导航">
+    <a href="/">日常</a>
+    <a class="nav-active" href="/memory/" aria-current="page">记忆</a>
+    <a href="https://github.com/tscuite" target="_blank" rel="noopener noreferrer">GitHub <svg class="icon small" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+  </nav>
+  <button class="user-chip" id="userNav" hidden>登录</button>
+  <button class="icon-button" id="themeToggle" aria-label="切换深色模式" title="切换深色模式"><svg class="icon" aria-hidden="true"><use href="#i-sun"/></svg></button>
+</header>
+<div class="mem-wrap">
   <div id="setup">
-    <h1>MEMORY_</h1>
-    <p>用你的账号登录。管理员可见全部记忆，普通用户仅公开内容。</p>
-    <label for="email">邮箱</label>
-    <input id="email" type="email" placeholder="you@example.com" autocomplete="email">
-    <label for="password">密码</label>
-    <input id="password" type="password" placeholder="密码" autocomplete="current-password">
-    <br>
-    <button id="connect">登录</button>
-    <p class="hint">没有账号？找 tscuite 开通，页面没有注册入口。</p>
+    <div class="setup-card">
+      <h1>MEMORY_</h1>
+      <p>用你的账号登录。管理员可见全部记忆，普通用户仅公开内容。</p>
+      <label for="email">邮箱</label>
+      <input id="email" type="email" placeholder="you@example.com" autocomplete="email">
+      <label for="password">密码</label>
+      <input id="password" type="password" placeholder="密码" autocomplete="current-password">
+      <br><br>
+      <button class="primary" id="connect">登录</button>
+      <p class="field-hint" style="text-align:center">没有账号？找 tscuite 开通，页面没有注册入口。</p>
+    </div>
   </div>
 
-  <div id="app" style="display:none">
+  <div id="app" hidden>
     <div class="mode-banner" id="modeBanner"></div>
-    <div id="adminUi" style="display:none">
-      <div class="search-row">
+    <div id="adminUi" hidden>
+      <div class="mem-search">
         <input id="q" placeholder="搜索记忆…（≥3 字走语义检索，/ 聚焦）" autocomplete="off">
       </div>
       <div class="filters" id="targetFilter"></div>
       <div class="filters" id="horizonFilter"></div>
     </div>
-    <div class="memories" id="list"></div>
-    <button id="more" style="display:none">加载更多</button>
-    <div class="empty" id="empty" style="display:none">没有匹配的记忆</div>
+    <div class="mem-list" id="list"></div>
+    <button id="more" hidden>加载更多</button>
+    <div class="empty" id="empty" hidden>没有匹配的记忆</div>
   </div>
 </div>
 
 <div id="drawer"><div class="drawer-panel" id="drawerPanel"></div></div>
-<div id="toast"></div>
+
+<dialog id="accountDialog" aria-labelledby="accountDialogTitle">
+  <form id="accountForm">
+    <div class="dialog-heading"><h2 id="accountDialogTitle">账号</h2><button type="button" id="accountClose" class="icon-button" aria-label="关闭账号面板">×</button></div>
+    <p class="account-line"><span>邮箱</span><b id="accountEmail"></b></p>
+    <p class="account-line"><span>身份</span><span class="role-badge" id="accountRole"></span></p>
+    <div class="dialog-actions"><button type="button" id="logoutBtn" class="text-button">退出登录</button><button class="primary" id="accountOk" type="button">知道了</button></div>
+  </form>
+</dialog>
+<div id="toast" class="toast" role="status" hidden></div>
 
 <script type="module">
 import { api, storeSessionToken, clearSessionToken } from "/assets/api.mjs";
@@ -165,21 +79,19 @@ const HORIZONS = [
   ["monthly", "monthly"], ["permanent", "permanent"],
 ];
 
-let me = null; // { email, name, isAdmin }
+let me = null;
 let state = { target: "", horizons: [], q: "", afterId: null, loading: false };
 let activeRequest;
 
 function toast(msg) {
   const t = $("toast");
-  t.textContent = msg; t.style.display = "block";
-  setTimeout(() => (t.style.display = "none"), 3500);
+  t.textContent = msg; t.hidden = false;
+  setTimeout(() => { t.hidden = true; }, 3500);
 }
-
 function escapeHtml(s) {
   return String(s ?? "").replace(/[&<>"']/g, (c) =>
     ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
-
 function relTime(iso) {
   if (!iso) return "";
   const s = Math.max(0, (Date.now() - new Date(iso.replace(" ", "T") + "Z").getTime()) / 1000);
@@ -193,7 +105,7 @@ function relTime(iso) {
 function cardHtml(m) {
   const tags = (m.tags || []).slice(0, 3).map((t) => `<span class="badge">#${escapeHtml(t)}</span>`).join("");
   const cat = m.category ? `<span class="badge">${escapeHtml(m.category)}</span>` : "";
-  return `<div class="card${me.isAdmin ? " clickable" : ""}" data-id="${m.id}">
+  return `<div class="mem-card${me.isAdmin ? " clickable" : ""}" data-id="${m.id}">
     <h3>${escapeHtml(m.subject || "（无标题）")}</h3>
     <div class="${me.isAdmin ? "snippet" : "full"}">${escapeHtml(m.content || "")}</div>
     <div class="meta">
@@ -214,10 +126,7 @@ async function loadAdmin(append) {
   try {
     let data;
     if (state.q.trim().length >= 3) {
-      const body = JSON.stringify({
-        q: state.q.trim(), target: state.target || null,
-        horizons: state.horizons, limit: 20, bump_reference: false,
-      });
+      const body = JSON.stringify({ q: state.q.trim(), target: state.target || null, horizons: state.horizons, limit: 20, bump_reference: false });
       data = await api("/api/memories/query", { method: "POST", body, signal: controller.signal });
     } else {
       const p = new URLSearchParams({ limit: "20", namespace: "default" });
@@ -231,8 +140,8 @@ async function loadAdmin(append) {
     if (!append) $("list").innerHTML = "";
     $("list").insertAdjacentHTML("beforeend", items.map(cardHtml).join(""));
     state.afterId = state.q.trim().length >= 3 ? null : data.next_after_id;
-    $("more").style.display = state.afterId ? "block" : "none";
-    $("empty").style.display = $("list").children.length ? "none" : "block";
+    $("more").hidden = !state.afterId;
+    $("empty").hidden = $("list").children.length > 0;
   } catch (e) {
     if (controller.signal.aborted) return;
     toast(e.message);
@@ -256,8 +165,8 @@ async function loadPublic(append) {
     if (!append) $("list").innerHTML = "";
     $("list").insertAdjacentHTML("beforeend", items.map(cardHtml).join(""));
     state.afterId = data.next_after_id;
-    $("more").style.display = state.afterId ? "block" : "none";
-    $("empty").style.display = $("list").children.length ? "none" : "block";
+    $("more").hidden = !state.afterId;
+    $("empty").hidden = $("list").children.length > 0;
     if (!$("list").children.length) $("empty").textContent = "还没有公开内容";
   } catch (e) {
     if (controller.signal.aborted) return;
@@ -267,9 +176,7 @@ async function loadPublic(append) {
   }
 }
 
-function load(append) {
-  return me.isAdmin ? loadAdmin(append) : loadPublic(append);
-}
+const load = (append) => (me.isAdmin ? loadAdmin(append) : loadPublic(append));
 
 async function openDetail(id) {
   try {
@@ -311,20 +218,45 @@ function renderChips(container, options, active, key) {
   };
 }
 
+function renderUser() {
+  $("userNav").hidden = !me;
+  if (me) $("userNav").textContent = me.name || me.email;
+}
 function showApp() {
-  $("setup").style.display = "none";
-  $("app").style.display = "block";
-  $("secretState").textContent = `${me.email} · 退出`;
+  $("setup").hidden = true;
+  $("app").hidden = false;
+  renderUser();
   $("modeBanner").textContent = me.isAdmin
     ? "管理员模式：可见全部记忆，搜索与筛选已开启"
     : "普通用户模式：仅公开内容，只读";
-  $("adminUi").style.display = me.isAdmin ? "block" : "none";
+  $("adminUi").hidden = !me.isAdmin;
   if (me.isAdmin) {
     renderChips($("targetFilter"), TARGETS, state.target, "target");
     renderChips($("horizonFilter"), HORIZONS, state.horizons, "horizons");
   }
   load(false);
 }
+function showSetup() {
+  activeRequest?.abort();
+  clearSessionToken();
+  me = null; $("list").replaceChildren(); closeDrawer();
+  state.afterId = null;
+  $("app").hidden = true; $("setup").hidden = false;
+  renderUser();
+}
+
+function updateThemeButton() {
+  const next = document.documentElement.dataset.theme === "dark" ? "浅色" : "深色";
+  $("themeToggle").setAttribute("aria-label", `切换${next}模式`);
+  $("themeToggle").title = `切换${next}模式`;
+}
+$("themeToggle").onclick = () => {
+  const theme = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+  document.documentElement.dataset.theme = theme;
+  try { localStorage.setItem("desk-theme", theme); } catch { /* 不阻断 */ }
+  updateThemeButton();
+};
+updateThemeButton();
 
 $("connect").onclick = async () => {
   const email = $("email").value.trim();
@@ -332,10 +264,7 @@ $("connect").onclick = async () => {
   if (!email || !password) return toast("填一下邮箱和密码");
   $("connect").disabled = true;
   try {
-    const { user, token } = await api("/api/auth/login", {
-      method: "POST",
-      body: JSON.stringify({ email, password }),
-    });
+    const { user, token } = await api("/api/auth/login", { method: "POST", body: JSON.stringify({ email, password }) });
     if (!user?.email) throw new Error("登录响应异常");
     if (token) storeSessionToken(token);
     me = user;
@@ -345,12 +274,20 @@ $("connect").onclick = async () => {
     toast(e.message);
   } finally { $("connect").disabled = false; }
 };
-$("secretState").onclick = () => {
-  activeRequest?.abort();
-  clearSessionToken();
-  me = null; $("list").replaceChildren(); closeDrawer();
-  state.afterId = null;
-  $("app").style.display = "none"; $("setup").style.display = "block";
+
+$("userNav").onclick = () => {
+  $("accountEmail").textContent = me.email;
+  $("accountRole").textContent = me.isAdmin ? "管理员" : "普通用户";
+  $("accountRole").className = `role-badge${me.isAdmin ? " admin" : ""}`;
+  $("accountDialog").showModal();
+};
+$("accountClose").onclick = () => $("accountDialog").close();
+$("accountOk").onclick = () => $("accountDialog").close();
+$("logoutBtn").onclick = async () => {
+  try { await api("/api/auth/logout", { method: "POST", body: JSON.stringify({}) }); } catch { /* 会话已失效也没关系 */ }
+  $("accountDialog").close();
+  showSetup();
+  toast("已退出登录");
 };
 
 $("more").onclick = () => load(true);
@@ -361,15 +298,14 @@ $("q").oninput = () => {
 };
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") closeDrawer();
-  if (e.key === "/" && !["INPUT", "TEXTAREA"].includes(document.activeElement.tagName) && $("app").style.display !== "none") { e.preventDefault(); $("q").focus(); }
+  if (e.key === "/" && !["INPUT", "TEXTAREA"].includes(document.activeElement.tagName) && !$("app").hidden) { e.preventDefault(); $("q").focus(); }
 });
 document.addEventListener("click", (e) => {
-  const card = e.target.closest(".card.clickable");
+  const card = e.target.closest(".mem-card.clickable");
   if (card) openDetail(card.dataset.id);
 });
 $("drawer").addEventListener("click", (e) => { if (e.target === $("drawer")) closeDrawer(); });
 
-// 会话已在（回到页面时自动登录）
 (async () => {
   try {
     const { user } = await api("/api/auth/me");

@@ -90,6 +90,16 @@
     <p id="registerStatus" class="form-status" role="status"></p><div class="dialog-actions"><button class="primary" id="registerSubmit" type="submit">登录</button></div>
   </form>
 </dialog>
+<dialog id="accountDialog" aria-labelledby="accountDialogTitle">
+  <form id="accountForm">
+    <div class="dialog-heading"><h2 id="accountDialogTitle">账号</h2><button type="button" id="accountClose" class="icon-button" aria-label="关闭账号面板">×</button></div>
+    <p class="account-line"><span>邮箱</span><b id="accountEmail"></b></p>
+    <p class="account-line"><span>身份</span><span class="role-badge" id="accountRole"></span></p>
+    <p class="account-line"><span>我的菜单</span><b id="accountFoods"></b></p>
+    <p class="field-hint">菜单按账号存在云端，换设备登录后还在。</p>
+    <div class="dialog-actions"><button type="button" id="logoutBtn" class="text-button">退出登录</button><button class="primary" id="accountOk" type="button">知道了</button></div>
+  </form>
+</dialog>
 <div id="toast" class="toast" role="status" hidden></div>
 <noscript><p class="state-message">请启用 JavaScript 以加载笔记和小组件。</p></noscript>
 </body>

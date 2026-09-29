@@ -140,19 +140,28 @@ $("foodForm").onsubmit = async event => {
 };
 
 // ---- 登录 / 注册 / 退出（邀请码） ----
-$("userNav").onclick = async () => {
+$("userNav").onclick = () => {
   if (me) {
-    try { await api("/api/auth/logout", { method: "POST", body: JSON.stringify({}) }); } catch { /* 会话已失效也没关系 */ }
-    clearSessionToken();
-    me = null;
-    renderUser();
-    loadFoods();
-    toast("已退出登录");
+    $("accountEmail").textContent = me.email;
+    $("accountRole").textContent = me.isAdmin ? "管理员" : "普通用户";
+    $("accountRole").className = `role-badge${me.isAdmin ? " admin" : ""}`;
+    $("accountFoods").textContent = foodsLoaded ? `${foods.length} 个备选` : "读取中…";
+    $("accountDialog").showModal();
   } else {
-    $("registerForm").dataset.mode = "login";
     $("registerStatus").textContent = "";
     $("registerDialog").showModal();
   }
+};
+$("accountClose").onclick = () => $("accountDialog").close();
+$("accountOk").onclick = () => $("accountDialog").close();
+$("logoutBtn").onclick = async () => {
+  try { await api("/api/auth/logout", { method: "POST", body: JSON.stringify({}) }); } catch { /* 会话已失效也没关系 */ }
+  clearSessionToken();
+  me = null;
+  $("accountDialog").close();
+  renderUser();
+  loadFoods();
+  toast("已退出登录");
 };
 $("registerCancel").onclick = () => $("registerDialog").close();
 $("registerForm").onsubmit = async event => {
