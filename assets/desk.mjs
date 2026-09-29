@@ -235,6 +235,14 @@ async function loadWeather() {
     if (!Number.isFinite(temperature) || !Number.isFinite(code)) throw new Error();
     $("weatherTemp").textContent = `${Math.round(temperature)}°`;
     $("weatherDescription").textContent = `${WMO(code)} · 摄氏度`;
+    // 天气图标随天气码变化：晴/多云/阴/雨/雪/雷
+    let icon = "sun";
+    if (code === 2) icon = "cloud-sun";
+    else if (code === 3 || code === 45 || code === 48) icon = "cloud";
+    else if ([71, 73, 75, 77, 85, 86].includes(code)) icon = "snow";
+    else if (code >= 95) icon = "thunder";
+    else if (code >= 51 && code <= 82) icon = "rain";
+    document.querySelector(".weather-sun use").setAttribute("href", "#i-" + icon);
   } catch { $("weatherTemp").textContent = "—"; $("weatherDescription").textContent = "暂不可用，点右上角重试"; }
   finally { $("weatherReload").disabled = false; }
 }
@@ -323,6 +331,15 @@ async function loadNotes(append = false) {
   loading = true;
   $("projectsReload").disabled = $("more").disabled = true;
   $("feedStatus").textContent = "";
+  if (!append && !items.size) {
+    // 骨架屏：避免首屏空荡荡
+    $("repoGrid").innerHTML = Array.from({ length: 8 }, () => `
+      <div class="skeleton-row">
+        <div class="skeleton w40"></div>
+        <div class="skeleton w80"></div>
+        <div class="skeleton w60"></div>
+      </div>`).join("");
+  }
   try {
     const query = new URLSearchParams({ limit: "20" });
     if (append && afterId) query.set("after_id", afterId);
