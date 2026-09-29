@@ -6,95 +6,174 @@
 <title>tscuite</title>
 <style>
   :root {
-    --bg: #f7f7f5;
-    --fg: #1a1a1a;
-    --muted: #6b6b6b;
-    --card: #ffffff;
-    --accent: #2563eb;
-    --border: #e5e5e0;
+    --bg: #faf9f6;
+    --fg: #1c1b18;
+    --muted: #8a8678;
+    --line: #e4e1d8;
+    --seal: #c73e2e;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    --serif: "Songti SC", "Noto Serif CJK SC", "Source Han Serif SC", STSong, serif;
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --bg: #101014;
-      --fg: #e8e8ea;
-      --muted: #9a9aa2;
-      --card: #1a1a20;
-      --accent: #6ea8ff;
-      --border: #2a2a32;
+      --bg: #14140f;
+      --fg: #e9e6da;
+      --muted: #7d7a6c;
+      --line: #2b2a22;
+      --seal: #e06a53;
     }
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
                  "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
-    background: var(--bg);
-    color: var(--fg);
+    background: var(--bg); color: var(--fg);
+    line-height: 1.75;
     min-height: 100vh;
-    display: grid;
-    place-items: center;
-    padding: 24px;
   }
-  main {
-    width: 100%;
-    max-width: 480px;
+  .wrap { max-width: 640px; margin: 0 auto; padding: 56px 22px 96px; }
+
+  header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 56px; }
+  .wordmark { font: 600 20px/1 var(--mono); letter-spacing: 0.04em; }
+  .wordmark em { font-style: normal; color: var(--seal); }
+  nav { display: flex; gap: 18px; }
+  nav a { color: var(--muted); text-decoration: none; font: 13px var(--mono); }
+  nav a:hover { color: var(--fg); }
+
+  .hero { margin-bottom: 72px; }
+  .hero .seal {
+    display: inline-grid; place-items: center;
+    width: 44px; height: 44px; background: var(--seal); color: var(--bg);
+    font: 700 18px var(--serif); margin-bottom: 20px;
   }
-  .avatar {
-    width: 64px;
-    height: 64px;
-    border-radius: 50%;
-    background: var(--accent);
-    color: #fff;
-    display: grid;
-    place-items: center;
-    font-size: 26px;
-    font-weight: 700;
-    margin-bottom: 20px;
+  .hero h1 { font: 600 30px/1.3 var(--serif); letter-spacing: 0.01em; }
+  .hero p { color: var(--muted); margin-top: 12px; font-size: 15px; }
+
+  .section-head {
+    display: flex; align-items: baseline; gap: 12px;
+    padding-bottom: 10px; border-bottom: 1px solid var(--line); margin-bottom: 8px;
   }
-  h1 { font-size: 28px; letter-spacing: 0.02em; }
-  .tagline { color: var(--muted); margin-top: 8px; font-size: 15px; }
-  .links {
-    margin-top: 32px;
-    display: grid;
-    gap: 10px;
+  .section-head h2 { font: 600 16px var(--serif); }
+  .section-head .count { font: 12px var(--mono); color: var(--muted); }
+
+  .note { padding: 28px 0; border-bottom: 1px solid var(--line); }
+  .note .date { font: 12px var(--mono); color: var(--seal); letter-spacing: 0.08em; margin-bottom: 10px; }
+  .note h3 { font: 600 19px/1.4 var(--serif); margin-bottom: 8px; }
+  .note .content {
+    font-family: var(--serif); font-size: 15.5px; white-space: pre-wrap;
+    word-break: break-word; color: var(--fg);
   }
-  .links a {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    text-decoration: none;
-    color: var(--fg);
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 14px 16px;
-    font-size: 15px;
-    transition: border-color .15s, transform .15s;
+  .note .tags { margin-top: 14px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .note .tag { font: 12px var(--mono); color: var(--muted); }
+  .note .tag::before { content: "#"; color: var(--line); }
+
+  #more {
+    display: block; width: 100%; margin-top: 24px; padding: 10px;
+    background: none; border: 1px solid var(--line); color: var(--muted);
+    font: 13px var(--mono); cursor: pointer;
   }
-  .links a:hover { border-color: var(--accent); transform: translateY(-1px); }
-  .links a::after { content: "→"; color: var(--muted); }
-  footer {
-    margin-top: 32px;
-    color: var(--muted);
-    font-size: 13px;
+  #more:hover { color: var(--fg); border-color: var(--muted); }
+
+  .empty { color: var(--muted); padding: 56px 0; font-family: var(--serif); font-size: 15px; }
+
+  footer { margin-top: 72px; padding-top: 20px; border-top: 1px solid var(--line); color: var(--muted); font: 13px var(--mono); }
+  footer a { color: var(--muted); text-decoration: none; }
+  footer a:hover { color: var(--fg); }
+
+  #toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    background: var(--seal); color: #fff; padding: 8px 16px;
+    font-size: 14px; display: none; max-width: 90vw;
   }
-  footer a { color: var(--accent); text-decoration: none; }
+
+  @media (prefers-reduced-motion: no-preference) {
+    #feed { animation: rise .5s ease both; }
+    @keyframes rise { from { opacity: 0; transform: translateY(8px); } }
+  }
 </style>
 </head>
 <body>
-<main>
-  <div class="avatar">T</div>
-  <h1>tscuite</h1>
-  <p class="tagline">DevOps / SRE · 私有化交付</p>
-  <nav class="links">
-    <a href="https://github.com/tscuite">GitHub</a>
-    <a href="/notes/">笔记</a>
-    <a href="/memory/">Memory 控制台</a>
-    <a href="/gvatest/">gvatest</a>
-    <a href="/huoxian/">huoxian</a>
-  </nav>
+<div class="wrap">
+  <header>
+    <div class="wordmark">tscuite<em>.</em>log</div>
+    <nav>
+      <a href="https://github.com/tscuite">GitHub</a>
+      <a href="/memory/">Memory_</a>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <div class="seal">记</div>
+    <h1>你好，我是 tscuite。</h1>
+    <p>DevOps / SRE，做私有化交付。这里是我公开的笔记，随手记，慢慢写。</p>
+  </section>
+
+  <div class="section-head">
+    <h2>笔记</h2>
+    <span class="count" id="count"></span>
+  </div>
+
+  <div id="feed">
+    <div class="empty" id="empty">还没有公开笔记。写一条 namespace=public 的记忆，就会出现在这里。</div>
+  </div>
+  <button id="more" style="display:none">加载更多</button>
+
   <footer>
     <a href="mailto:tscuite@agent.qq.com">tscuite@agent.qq.com</a>
   </footer>
-</main>
+</div>
+<div id="toast"></div>
+
+<script>
+const ENDPOINT = "https://memory.tscuite.workers.dev";
+const $ = (id) => document.getElementById(id);
+let afterId = null;
+
+function toast(msg) {
+  const t = $("toast");
+  t.textContent = msg; t.style.display = "block";
+  setTimeout(() => (t.style.display = "none"), 3500);
+}
+
+function escapeHtml(s) {
+  return String(s ?? "").replace(/[&<>"']/g, (c) =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+function noteHtml(n) {
+  const date = (n.created_at || "").slice(0, 10).replace(/-/g, ".");
+  const tags = (n.tags || []).map((t) => `<span class="tag">${escapeHtml(t)}</span>`).join("");
+  return `<article class="note">
+    <div class="date">${date}</div>
+    <h3>${escapeHtml(n.subject || "（无标题）")}</h3>
+    <div class="content">${escapeHtml(n.content || "")}</div>
+    ${tags ? `<div class="tags">${tags}</div>` : ""}
+  </article>`;
+}
+
+async function load(append) {
+  try {
+    const p = new URLSearchParams({ limit: "10" });
+    if (afterId) p.set("after_id", afterId);
+    const res = await fetch(`${ENDPOINT}/api/public/memories?${p}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    if (!append) $("feed").innerHTML = "";
+    $("feed").insertAdjacentHTML("beforeend", (data.items || []).map(noteHtml).join(""));
+    afterId = data.next_after_id;
+    const total = $("feed").querySelectorAll(".note").length;
+    $("count").textContent = total ? `共 ${total} 篇` : "";
+    $("more").style.display = data.next_after_id ? "block" : "none";
+    $("empty").style.display = total ? "none" : "block";
+  } catch (e) {
+    toast("加载失败：" + e.message);
+    $("empty").style.display = "block";
+    $("empty").textContent = "笔记加载失败，稍后再试试。";
+  }
+}
+
+$("more").onclick = () => load(true);
+load(false);
+</script>
 </body>
 </html>
