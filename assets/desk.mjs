@@ -61,6 +61,8 @@ function renderUser() {
   const chip = $("userNav");
   chip.textContent = me ? (me.name || me.email) : "登录";
   chip.title = me ? `${me.email} · 点击打开账号面板` : "登录后可以定制自己的菜单并加入聊天";
+  // 管理员才显示「更新热门快照」按钮
+  $("trendingRefresh").hidden = !(me?.isAdmin);
   updateChat(me);
 }
 async function loadFoods() {
@@ -353,6 +355,19 @@ async function loadNotes(append = false) {
   }
 }
 $("projectsReload").onclick = () => loadNotes();
+// 管理员手动更新每日热门快照（生成在队列里，20 秒后自动重读）
+$("trendingRefresh").onclick = async () => {
+  $("trendingRefresh").disabled = true;
+  try {
+    await api("/api/config/trending/refresh", { method: "POST", body: JSON.stringify({}) });
+    toast("已开始更新快照，约 20 秒后自动刷新");
+    setTimeout(() => { if (!loading) loadNotes(); }, 20000);
+  } catch (error) {
+    toast(error.message);
+  } finally {
+    $("trendingRefresh").disabled = false;
+  }
+};
 $("more").onclick = () => loadNotes(true);
 document.addEventListener("visibilitychange", () => { if (!document.hidden) { renderDate(); renderRest(); } });
 loadHolidays(); loadWeather(); loadQuote(); loadNotes(); initAuth();
