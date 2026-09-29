@@ -14,6 +14,8 @@
 <svg class="icon-definitions" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
   <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></symbol>
   <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M6 18 18 6M6 6h12v12"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 7v5h-5M4 17v-5h5M5 7a8 8 0 0 1 13-2l2 3M4 16l2 3a8 8 0 0 0 13-2"/></symbol>
 </defs></svg>
 <header class="topbar">
   <a class="brand" href="/" aria-label="回到小桌面"><span class="brand-mark">t.</span><span>tscuite</span></a>
@@ -25,35 +27,51 @@
   <button class="user-chip" id="userNav" hidden>登录</button>
   <button class="icon-button" id="themeToggle" aria-label="切换深色模式" title="切换深色模式"><svg class="icon" aria-hidden="true"><use href="#i-sun"/></svg></button>
 </header>
-<div class="mem-wrap">
-  <div id="setup">
-    <div class="setup-card">
-      <h1>MEMORY_</h1>
-      <p>用你的账号登录。管理员可见全部记忆，普通用户仅公开内容。</p>
-      <label for="email">邮箱</label>
-      <input id="email" type="email" placeholder="you@example.com" autocomplete="email">
-      <label for="password">密码</label>
-      <input id="password" type="password" placeholder="密码" autocomplete="current-password">
-      <br><br>
-      <button class="primary" id="connect">登录</button>
-      <p class="field-hint" style="text-align:center">没有账号？找 tscuite 开通，页面没有注册入口。</p>
-    </div>
-  </div>
-
-  <div id="app" hidden>
-    <div class="mode-banner" id="modeBanner"></div>
-    <div id="adminUi" hidden>
-      <div class="mem-search">
-        <input id="q" placeholder="搜索记忆…（≥3 字走语义检索，/ 聚焦）" autocomplete="off">
+<div class="page">
+  <section class="quote-strip" aria-label="每日一言">
+    <time id="todayDate"></time>
+    <span class="strip-sep" aria-hidden="true"></span>
+    <blockquote id="hitokoto">正在取一句话…</blockquote>
+    <span class="quote-from" id="hitokotoFrom"></span>
+  </section>
+  <div class="mem-main">
+    <div id="setup">
+      <div class="setup-card">
+        <h1>登录记忆</h1>
+        <p>管理员可见全部记忆，普通用户仅公开内容。</p>
+        <label for="email">邮箱</label>
+        <input id="email" type="email" placeholder="you@example.com" autocomplete="email">
+        <label for="password">密码</label>
+        <input id="password" type="password" placeholder="密码" autocomplete="current-password">
+        <br><br>
+        <button class="primary" id="connect">登录</button>
+        <p class="field-hint">没有账号？找 tscuite 开通，页面没有注册入口。</p>
       </div>
-      <div class="filters" id="targetFilter"></div>
-      <div class="filters" id="horizonFilter"></div>
     </div>
-    <div class="mem-list" id="list"></div>
-    <button id="more" hidden>加载更多</button>
-    <div class="empty" id="empty" hidden>没有匹配的记忆</div>
+
+    <div id="app" hidden>
+      <section class="card mem-panel">
+        <div class="projects-heading">
+          <div>
+            <div class="title-line"><span class="section-symbol" aria-hidden="true">⌘</span><h1>记忆</h1></div>
+            <div class="mem-mode" id="modeBanner"><span class="dot"></span><span>…</span></div>
+          </div>
+          <button class="icon-button" id="memReload" aria-label="重新读取记忆" title="重新读取"><svg class="icon" aria-hidden="true"><use href="#i-refresh"/></svg></button>
+        </div>
+        <div class="project-tools mem-tools" id="adminUi" hidden>
+          <div class="filter-list" id="targetFilter"></div>
+          <div class="filter-list" id="horizonFilter"></div>
+          <label class="search"><svg class="icon small" aria-hidden="true"><use href="#i-search"/></svg><input id="q" type="search" placeholder="搜索记忆…（≥3 字走语义检索，/ 聚焦）" autocomplete="off" aria-label="搜索记忆"></label>
+        </div>
+        <div class="mem-list" id="list"></div>
+        <p class="state-message" id="empty" hidden>没有匹配的记忆</p>
+        <div class="projects-footer"><span id="memCount">还没有内容</span><span>管理员可看全部 · 普通用户仅公开</span></div>
+      </section>
+      <div class="feed-actions"><button class="text-button" id="more" hidden>加载更多</button></div>
+    </div>
   </div>
 </div>
+<footer><span>tscuite 的小桌面</span><span>菜单存云端 · 公开数据按需读取</span></footer>
 
 <div id="drawer"><div class="drawer-panel" id="drawerPanel"></div></div>
 
@@ -102,17 +120,35 @@ function relTime(iso) {
   return iso.slice(0, 10);
 }
 
+function renderDate() {
+  const today = new Date(new Date().getTime() + 8 * 3600000).toISOString().slice(0, 10);
+  $("todayDate").dateTime = today;
+  $("todayDate").textContent = new Intl.DateTimeFormat("zh-CN", { year: "numeric", month: "long", day: "numeric", weekday: "long", timeZone: "Asia/Shanghai" }).format(new Date());
+}
+async function loadQuote() {
+  try {
+    const quote = await api("/api/public/quote");
+    if (typeof quote.hitokoto !== "string" || !quote.hitokoto) throw new Error();
+    $("hitokoto").textContent = quote.hitokoto;
+    $("hitokotoFrom").textContent = quote.from || "一言";
+  } catch {
+    $("hitokoto").textContent = "一言暂时没有连接上。";
+    $("hitokotoFrom").textContent = "";
+  }
+}
+renderDate(); loadQuote();
+
 function cardHtml(m) {
-  const tags = (m.tags || []).slice(0, 3).map((t) => `<span class="badge">#${escapeHtml(t)}</span>`).join("");
-  const cat = m.category ? `<span class="badge">${escapeHtml(m.category)}</span>` : "";
-  return `<div class="mem-card${me.isAdmin ? " clickable" : ""}" data-id="${m.id}">
-    <h3>${escapeHtml(m.subject || "（无标题）")}</h3>
-    <div class="${me.isAdmin ? "snippet" : "full"}">${escapeHtml(m.content || "")}</div>
-    <div class="meta">
-      <span class="badge ${escapeHtml(m.target || "")}">${escapeHtml(m.target || "memory")}</span>
-      <span class="badge">${escapeHtml(m.horizon || "daily")}</span>
+  const tags = (m.tags || []).slice(0, 3).map((t) => `<span class="pill plain">#${escapeHtml(t)}</span>`).join("");
+  const cat = m.category ? `<span class="pill plain">${escapeHtml(m.category)}</span>` : "";
+  const targetClass = ["memory", "user", "failure"].includes(m.target) ? m.target : "plain";
+  return `<div class="mem-row${me.isAdmin ? " clickable" : ""}" data-id="${m.id}">
+    <div class="mem-head"><h3>${escapeHtml(m.subject || "（无标题）")}</h3><span class="time" title="${escapeHtml(m.created_at || "")}">${relTime(m.created_at)}</span></div>
+    <div class="mem-text${me.isAdmin ? " snippet" : ""}">${escapeHtml(m.content || "")}</div>
+    <div class="mem-meta">
+      <span class="pill ${targetClass}">${escapeHtml(m.target || "memory")}</span>
+      <span class="pill plain">${escapeHtml(m.horizon || "daily")}</span>
       ${cat}${tags}
-      <span class="time" title="${escapeHtml(m.created_at || "")}">${relTime(m.created_at)}</span>
     </div>
   </div>`;
 }
@@ -142,6 +178,7 @@ async function loadAdmin(append) {
     state.afterId = state.q.trim().length >= 3 ? null : data.next_after_id;
     $("more").hidden = !state.afterId;
     $("empty").hidden = $("list").children.length > 0;
+    $("memCount").textContent = `共 ${$("list").children.length} 条`;
   } catch (e) {
     if (controller.signal.aborted) return;
     toast(e.message);
@@ -168,6 +205,7 @@ async function loadPublic(append) {
     $("more").hidden = !state.afterId;
     $("empty").hidden = $("list").children.length > 0;
     if (!$("list").children.length) $("empty").textContent = "还没有公开内容";
+    $("memCount").textContent = `共 ${$("list").children.length} 条公开内容`;
   } catch (e) {
     if (controller.signal.aborted) return;
     toast(e.message);
@@ -206,7 +244,7 @@ function closeDrawer() { $("drawer").classList.remove("open"); }
 
 function renderChips(container, options, active, key) {
   container.innerHTML = options.map(([v, label]) =>
-    `<button class="chip ${((Array.isArray(active) ? active.includes(v) : active === v) || (v === "" && active.length === 0)) ? "on" : ""}" data-v="${v}">${label}</button>`).join("");
+    `<button class="filter ${((Array.isArray(active) ? active.includes(v) : active === v) || (v === "" && active.length === 0)) ? "active" : ""}" data-v="${v}" aria-pressed="false">${label}</button>`).join("");
   container.onclick = (e) => {
     const v = e.target.dataset.v;
     if (v === undefined) return;
@@ -226,7 +264,9 @@ function showApp() {
   $("setup").hidden = true;
   $("app").hidden = false;
   renderUser();
-  $("modeBanner").textContent = me.isAdmin
+  const mode = $("modeBanner");
+  mode.classList.toggle("admin", Boolean(me.isAdmin));
+  mode.lastChild.textContent = me.isAdmin
     ? "管理员模式：可见全部记忆，搜索与筛选已开启"
     : "普通用户模式：仅公开内容，只读";
   $("adminUi").hidden = !me.isAdmin;
@@ -291,6 +331,7 @@ $("logoutBtn").onclick = async () => {
 };
 
 $("more").onclick = () => load(true);
+$("memReload").onclick = () => load(false);
 let debounce;
 $("q").oninput = () => {
   clearTimeout(debounce);
@@ -301,7 +342,7 @@ document.addEventListener("keydown", (e) => {
   if (e.key === "/" && !["INPUT", "TEXTAREA"].includes(document.activeElement.tagName) && !$("app").hidden) { e.preventDefault(); $("q").focus(); }
 });
 document.addEventListener("click", (e) => {
-  const card = e.target.closest(".mem-card.clickable");
+  const card = e.target.closest(".mem-row.clickable");
   if (card) openDetail(card.dataset.id);
 });
 $("drawer").addEventListener("click", (e) => { if (e.target === $("drawer")) closeDrawer(); });

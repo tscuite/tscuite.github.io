@@ -1,35 +1,35 @@
-/* 记忆页补充样式：与日常页共用 desk.css 的暖色主题变量与顶栏 */
-.mem-wrap{max-width:860px;margin:0 auto;padding:24px 0 72px}
-.mode-banner{border:1px dashed var(--line);border-radius:12px;padding:10px 16px;margin-bottom:18px;color:var(--muted);font-size:12.5px;background:var(--paper)}
+/* 记忆页：复用 desk.css 的组件语言（.card/.filter/.search/quote-strip/页脚），只补列表与登录卡 */
+.mem-main{padding-top:22px}
 .setup-card{max-width:420px;margin:6vh auto 0;background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:28px;box-shadow:var(--shadow);text-align:center}
-.setup-card h1{font-size:20px;letter-spacing:.14em;margin-bottom:6px;font-family:ui-monospace,"SF Mono",Menlo,monospace}
-.setup-card p{color:var(--muted);font-size:13px;margin-bottom:8px}
+.setup-card h1{font-size:19px;margin-bottom:4px}
+.setup-card>p{color:var(--muted);font-size:13px;margin-bottom:10px}
 .setup-card label{display:block;text-align:left;font-size:12px;font-weight:600;margin:14px 0 6px}
 .setup-card input{width:100%;background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:11px 13px;color:var(--ink);font-size:13.5px;outline-offset:4px}
 .setup-card input:focus{border-color:var(--brand);outline:3px solid var(--brand)}
-.mem-search{display:flex;gap:10px;margin-bottom:14px}
-.mem-search input{flex:1;background:var(--paper);border:1px solid var(--line);border-radius:10px;color:var(--ink);padding:11px 14px;font-size:14px;outline-offset:4px}
-.mem-search input:focus{border-color:var(--brand);outline:3px solid var(--brand)}
-.mem-search input::placeholder{color:var(--faint)}
-.filters{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
-.chip{background:var(--paper);border:1px solid var(--line);color:var(--muted);padding:5px 13px;border-radius:999px;font-size:12.5px;cursor:pointer}
-.chip.on{color:#fff;background:var(--brand);border-color:var(--brand);font-weight:600}
-.mem-list{display:grid;gap:12px}
-.mem-card{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:16px 18px;box-shadow:var(--shadow);transition:border-color .12s}
-.mem-card.clickable{cursor:pointer}
-.mem-card.clickable:hover{border-color:var(--brand)}
-.mem-card h3{font-size:15.5px;font-weight:650;margin-bottom:6px}
-.snippet{color:var(--muted);font-size:13.5px;white-space:pre-wrap;word-break:break-word;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
-.full{font-size:14px;white-space:pre-wrap;word-break:break-word}
-.meta{display:flex;align-items:center;gap:8px;margin-top:12px;flex-wrap:wrap;font-size:11px;color:var(--muted)}
-.badge{font:11px ui-monospace,"SF Mono",Menlo,monospace;padding:2px 8px;border-radius:6px;border:1px solid var(--line);color:var(--muted)}
-.badge.memory{color:#3572a5;border-color:#cfe0f0}
-.badge.user{color:#15803d;border-color:#c8e6d2}
-.badge.failure{color:#b91c1c;border-color:#f0cfcf}
-.time{margin-left:auto;font-size:11px;color:var(--faint);white-space:nowrap}
-#more{display:block;width:100%;margin-top:16px;padding:11px;background:var(--paper);border:1px solid var(--line);border-radius:12px;color:var(--muted);cursor:pointer;font-size:13.5px}
-#more:hover{color:var(--ink);border-color:var(--line-strong)}
-.empty{color:var(--muted);text-align:center;padding:64px 0;font-size:13.5px}
+.setup-card .primary{width:100%}
+.mem-panel{padding:25px 26px 14px}
+.mem-panel .projects-heading p{font-size:12px;color:var(--muted);margin-top:8px}
+.mem-mode{display:flex;align-items:center;gap:8px}
+.mem-mode .dot{width:6px;height:6px;border-radius:50%;background:var(--faint);flex-shrink:0}
+.mem-mode.admin .dot{background:var(--brand)}
+.mem-tools{display:flex;align-items:stretch;flex-direction:column;gap:10px}
+.mem-tools .search{width:100%}
+.mem-list{margin-top:6px}
+.mem-row{padding:16px 10px;border-top:1px solid var(--line);transition:background .12s}
+.mem-row:first-child{border-top:none}
+.mem-row.clickable{cursor:pointer}
+.mem-row.clickable:hover{background:var(--soft)}
+.mem-head{display:flex;align-items:baseline;gap:10px}
+.mem-head h3{font-size:15px;font-weight:650;min-width:0;overflow-wrap:anywhere}
+.mem-head .time{margin-left:auto;font-size:11px;color:var(--faint);white-space:nowrap}
+.mem-text{color:var(--muted);font-size:13.5px;margin-top:6px;white-space:pre-wrap;word-break:break-word}
+.mem-text.snippet{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.mem-meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.mem-meta .pill{font:11px ui-monospace,"SF Mono",Menlo,monospace;color:var(--faint);border:1px solid var(--line);border-radius:999px;padding:2px 9px}
+.mem-meta .pill.memory{color:#3572a5;border-color:#cfe0f0}
+.mem-meta .pill.user{color:#15803d;border-color:#c8e6d2}
+.mem-meta .pill.failure{color:#b91c1c;border-color:#f0cfcf}
+.mem-meta .pill.plain{color:var(--muted)}
 /* 抽屉 */
 #drawer{position:fixed;inset:0;background:rgba(20,15,5,.45);display:none;align-items:flex-end;justify-content:center;z-index:30}
 #drawer.open{display:flex}
@@ -40,4 +40,4 @@
 .kv b{color:var(--ink);font-weight:600}
 .drawer-close{float:right;background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer}
 .drawer-close:hover{color:var(--ink)}
-@media(max-width:720px){.mem-wrap{padding:18px 0 56px}.setup-card{margin-top:3vh;padding:22px}}
+@media(max-width:720px){.mem-panel{padding:20px 18px 12px}.setup-card{margin-top:3vh;padding:22px}.mem-row{padding:14px 4px}}
