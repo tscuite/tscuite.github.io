@@ -31,7 +31,6 @@
     }
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  html { scrollbar-gutter: stable; }
   body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
                  "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
@@ -48,11 +47,10 @@
     border-bottom: 1px solid var(--line);
   }
   .header-inner {
-    max-width: 680px; margin: 0 auto; padding: 14px 20px;
+    max-width: 720px; margin: 0 auto; padding: 14px 20px;
     display: flex; align-items: center; justify-content: space-between;
   }
   .wordmark { font: 650 16px/1 var(--mono); letter-spacing: 0.02em; }
-  .wordmark em { font-style: normal; color: var(--accent); }
   .wordmark .cursor {
     display: inline-block; width: 8px; height: 15px; margin-left: 2px;
     background: var(--accent); vertical-align: -2px;
@@ -60,25 +58,18 @@
   }
   @keyframes blink { 50% { opacity: 0; } }
   nav { display: flex; gap: 20px; }
-  nav a {
-    color: var(--muted); text-decoration: none; font: 13px var(--mono);
-    transition: color .15s;
-  }
+  nav a { color: var(--muted); text-decoration: none; font: 13px var(--mono); transition: color .15s; }
   nav a:hover { color: var(--fg); }
 
-  main { max-width: 680px; margin: 0 auto; padding: 32px 20px 72px; }
+  main { max-width: 720px; margin: 0 auto; padding: 28px 20px 72px; }
 
-  /* 仪表条：吃什么 + 周末倒计时 一体化 */
+  /* 仪表条：吃什么 + 周末倒计时 */
   .widgetbar {
     display: flex; align-items: stretch;
     background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
-    padding: 16px 20px; margin-bottom: 40px;
+    padding: 16px 20px; margin-bottom: 12px;
   }
-  .wb-food {
-    flex: 1.5; min-width: 0;
-    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
-  }
-  .w-title { font: 12px var(--mono); color: var(--faint); letter-spacing: 0.04em; }
+  .wb-food { flex: 1.5; min-width: 0; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
   .wb-food .food-emoji { font-size: 24px; line-height: 1; }
   .wb-food .food-name { font-size: 20px; font-weight: 700; letter-spacing: 0.01em; }
   .wb-food .w-title { margin-right: auto; }
@@ -88,6 +79,7 @@
   .weekend-big { font: 700 24px/1 var(--mono); color: var(--accent); }
   .weekend-unit { font-size: 13px; color: var(--muted); }
   .weekend-sub { font: 11.5px var(--mono); color: var(--faint); }
+  .w-title { font: 12px var(--mono); color: var(--faint); letter-spacing: 0.04em; }
   .w-btn {
     background: none; border: 1px solid var(--line-strong); color: var(--muted);
     font: 11.5px var(--mono); border-radius: 7px; padding: 4px 12px; cursor: pointer;
@@ -104,70 +96,100 @@
   }
   .temp.show { opacity: 1; }
   .temp.hide { opacity: 0; }
-  @media (max-width: 560px) {
-    .widgetbar { flex-direction: column; gap: 14px; }
-    .wb-divider { width: auto; height: 1px; margin: 2px 0; }
-  }
 
-  .note { margin-bottom: 36px; }
+  /* 迷你组件行 */
+  .minis { display: grid; grid-template-columns: 1fr 1.2fr 1fr; gap: 12px; margin-bottom: 40px; }
+  .mini {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+    padding: 13px 16px; min-height: 74px;
+    display: flex; flex-direction: column; justify-content: center; gap: 4px;
+  }
+  .mini .val { font-size: 17px; font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .mini .hitokoto { font-size: 13.5px; color: var(--muted); line-height: 1.5;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .mini .from { font: 11px var(--mono); color: var(--faint); }
+
+  /* GitHub 每日热门面板 */
+  .panel {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+    padding: 18px 20px 14px; margin-bottom: 36px;
+  }
+  .panel-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 6px; }
+  .panel-head h2 { font-size: 15.5px; font-weight: 650; }
+  .panel-head .date { font: 12px var(--mono); color: var(--faint); }
+  .panel .repo {
+    display: grid;
+    grid-template-columns: 30px 1fr auto auto;
+    grid-template-areas: "rank name stars lang";
+    column-gap: 12px;
+    align-items: baseline;
+    text-decoration: none;
+    padding: 9px 8px;
+    border-radius: 8px;
+    transition: background .12s;
+  }
+  .panel .repo:hover { background: color-mix(in srgb, var(--fg) 4%, transparent); }
+  .panel .repo .rank { grid-area: rank; font: 12px var(--mono); color: var(--faint); text-align: right; }
+  .panel .repo .rname { grid-area: name; font: 600 13.5px/1.4 var(--mono); color: var(--fg); word-break: break-all; }
+  .panel .repo:hover .rname { color: var(--accent); }
+  .panel .repo .stars { grid-area: stars; font: 12px var(--mono); color: var(--muted); }
+  .panel .repo .lang { grid-area: lang; font: 11.5px var(--mono); color: var(--muted); display: flex; align-items: center; gap: 6px; }
+  .panel .dot { width: 8px; height: 8px; border-radius: 50%; }
+  .panel .desc { grid-area: desc; }
+  .expand-btn {
+    display: block; width: 100%; margin-top: 6px; padding: 8px;
+    background: none; border: none; color: var(--faint);
+    font: 12px var(--mono); cursor: pointer;
+  }
+  .expand-btn:hover { color: var(--fg); }
+
+  /* 笔记 */
+  .note { margin-bottom: 32px; }
   .note-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
   .note-head .date {
     font: 12px var(--mono); color: var(--accent); letter-spacing: 0.06em;
     border: 1px solid var(--line-strong); border-radius: 6px; padding: 2px 8px;
   }
   .note-head h2 { font-size: 17px; font-weight: 650; letter-spacing: 0.01em; }
-
-  .repo {
+  .note .plain {
+    font-size: 14px; color: var(--muted); white-space: pre-wrap;
+    word-break: break-word; padding: 4px 16px;
+  }
+  .note .repo {
     display: grid;
-    grid-template-columns: 34px 1fr auto;
-    grid-template-areas: "rank name stars" "rank desc lang";
+    grid-template-columns: 34px 1fr auto auto;
+    grid-template-areas: "rank name stars lang" "rank desc desc desc";
     column-gap: 12px; row-gap: 2px;
     align-items: baseline;
     text-decoration: none;
-    background: var(--surface);
-    border: 1px solid var(--line);
-    border-radius: 12px;
-    padding: 13px 16px;
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: 12px; padding: 13px 16px;
     transition: border-color .15s, transform .15s, box-shadow .15s;
   }
-  .repo + .repo { margin-top: 8px; }
-  .repo:hover {
-    border-color: var(--line-strong);
-    transform: translateY(-1px);
-    box-shadow: var(--shadow);
-  }
-  .repo .rank {
-    grid-area: rank; font: 12px var(--mono); color: var(--faint);
-    text-align: right;
-  }
-  .repo .rname {
-    grid-area: name; font: 600 14px/1.3 var(--mono); color: var(--fg);
-    word-break: break-all;
-  }
-  .repo:hover .rname { color: var(--accent); }
-  .repo .rname .arrow { color: var(--faint); opacity: 0; transition: opacity .15s; }
-  .repo:hover .rname .arrow { opacity: 1; }
-  .repo .stars {
+  .note .repo + .repo { margin-top: 8px; }
+  .note .repo:hover { border-color: var(--line-strong); transform: translateY(-1px); box-shadow: var(--shadow); }
+  .note .repo .rank { grid-area: rank; font: 12px var(--mono); color: var(--faint); text-align: right; }
+  .note .repo .rname { grid-area: name; font: 600 14px/1.3 var(--mono); color: var(--fg); word-break: break-all; }
+  .note .repo:hover .rname { color: var(--accent); }
+  .note .repo .arrow { color: var(--faint); opacity: 0; transition: opacity .15s; }
+  .note .repo:hover .arrow { opacity: 1; }
+  .note .repo .stars {
     grid-area: stars; justify-self: end;
     font: 12px var(--mono); color: var(--muted);
     background: color-mix(in srgb, var(--fg) 5%, transparent);
     border-radius: 6px; padding: 2px 8px;
   }
-  .repo .lang {
+  .note .repo .lang {
     grid-area: lang; justify-self: end;
     display: flex; align-items: center; gap: 6px;
     font: 11.5px var(--mono); color: var(--muted);
   }
-  .repo .dot { width: 8px; height: 8px; border-radius: 50%; }
-  .repo .rdesc {
-    grid-area: desc; grid-column: 2 / -1;
+  .note .repo .dot { width: 8px; height: 8px; border-radius: 50%; }
+  .note .repo .rdesc {
+    grid-area: desc;
     font-size: 13.5px; color: var(--muted);
     display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
     overflow: hidden; word-break: break-word;
-  }
-  .note .plain {
-    font-size: 14px; color: var(--muted); white-space: pre-wrap;
-    word-break: break-word; padding: 4px 16px;
   }
   .note .tags { margin-top: 12px; display: flex; gap: 6px; flex-wrap: wrap; }
   .note .tag {
@@ -183,13 +205,10 @@
   }
   #more:hover { color: var(--fg); border-color: var(--line-strong); }
 
-  .empty {
-    text-align: center; padding: 64px 0; color: var(--faint);
-    font: 13px var(--mono);
-  }
+  .empty { text-align: center; padding: 48px 0; color: var(--faint); font: 13px var(--mono); }
 
   footer {
-    max-width: 680px; margin: 0 auto; padding: 20px 20px 40px;
+    max-width: 720px; margin: 0 auto; padding: 20px 20px 40px;
     border-top: 1px solid var(--line);
     display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap;
     color: var(--faint); font: 12px var(--mono);
@@ -200,16 +219,44 @@
   #toast {
     position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
     background: var(--accent); color: #fff; padding: 9px 18px; border-radius: 10px;
-    font-size: 13.5px; display: none; max-width: 90vw; z-index: 20;
+    font-size: 13.5px; display: none; max-width: 90vw; z-index: 40;
     box-shadow: var(--shadow);
   }
 
+  /* 编辑吃什么清单 */
+  dialog {
+    border: 1px solid var(--line-strong); border-radius: 14px;
+    background: var(--surface); color: var(--fg);
+    padding: 20px; width: min(520px, 92vw);
+  }
+  dialog::backdrop { background: rgba(0,0,0,.45); }
+  dialog h3 { font-size: 15px; margin-bottom: 12px; }
+  dialog textarea {
+    width: 100%; height: 180px; resize: vertical;
+    background: var(--bg); border: 1px solid var(--line); border-radius: 8px;
+    color: var(--fg); font: 13px/1.7 var(--mono); padding: 10px 12px; outline: none;
+  }
+  dialog textarea:focus { border-color: var(--accent); }
+  dialog input {
+    width: 100%; margin-top: 10px; padding: 8px 12px;
+    background: var(--bg); border: 1px solid var(--line); border-radius: 8px;
+    color: var(--fg); font: 13px var(--mono); outline: none;
+  }
+  dialog .dlg-hint { font: 11.5px var(--mono); color: var(--faint); margin-top: 8px; }
+  dialog .dlg-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 14px; }
+  .btn-primary {
+    background: var(--accent); color: #fff; border: none; border-radius: 8px;
+    font: 13px var(--mono); padding: 7px 16px; cursor: pointer;
+  }
+
   @media (prefers-reduced-motion: no-preference) {
-    .note { animation: rise .45s ease both; }
+    .note, .panel, .minis, .widgetbar { animation: rise .45s ease both; }
     @keyframes rise { from { opacity: 0; transform: translateY(10px); } }
   }
-  @media (max-width: 520px) {
-    .repo { grid-template-columns: 26px 1fr auto; }
+  @media (max-width: 560px) {
+    .widgetbar { flex-direction: column; gap: 14px; }
+    .wb-divider { width: auto; height: 1px; margin: 2px 0; }
+    .minis { grid-template-columns: 1fr; }
   }
 </style>
 </head>
@@ -231,6 +278,7 @@
       <span class="food-emoji">🍚</span>
       <span class="food-name" id="foodName">……</span>
       <button class="w-btn" id="reroll">换一个</button>
+      <button class="w-btn" id="foodEdit">编辑</button>
     </div>
     <div class="wb-divider"></div>
     <div class="wb-weekend">
@@ -243,6 +291,23 @@
     </div>
   </section>
 
+  <section class="minis">
+    <div class="mini">
+      <span class="w-title">北京天气</span>
+      <span class="val" id="weather">加载中…</span>
+    </div>
+    <div class="mini">
+      <span class="w-title">一言</span>
+      <span class="hitokoto" id="hitokoto">加载中…</span>
+      <span class="from" id="hitokotoFrom"></span>
+    </div>
+    <div class="mini">
+      <span class="w-title" id="holidayTitle">距离国庆</span>
+      <span class="val" id="holidayVal">-</span>
+    </div>
+  </section>
+
+  <div id="trending"></div>
   <div id="feed"></div>
   <div class="empty" id="empty" style="display:none">还没有公开笔记。写一条 namespace=public 的记忆，就会出现在这里。</div>
   <button id="more" style="display:none">加载更多</button>
@@ -253,23 +318,67 @@
   <span>Cloudflare Workers · D1 · Vectorize</span>
   <a href="mailto:tscuite@agent.qq.com">tscuite@agent.qq.com</a>
 </footer>
+
+<dialog id="foodDialog">
+  <h3>编辑吃什么清单</h3>
+  <textarea id="foodListText" placeholder="空格或换行分隔，比如：麻辣烫 火锅 面条"></textarea>
+  <input id="secretInput" type="password" placeholder="API_SECRET（保存需要，与 Memory 控制台同一个）" autocomplete="off">
+  <div class="dlg-hint">密钥只保存在你本机浏览器，用于本地签名，不会发给任何服务器。</div>
+  <div class="dlg-actions">
+    <button class="w-btn" id="foodCancel">取消</button>
+    <button class="btn-primary" id="foodSave">保存</button>
+  </div>
+</dialog>
+
 <div id="toast"></div>
 
 <script>
-const ENDPOINT = "https://memory.tscuite.workers.dev";
+const ENDPOINT = localStorage.getItem("mem_console_endpoint") || "https://memory.tscuite.workers.dev";
+const LS_SECRET = "mem_console_secret";
 const $ = (id) => document.getElementById(id);
 let afterId = null;
 
-// ---- 今天吃什么：按日期确定性出结果，当天不变，可手动换一个 ----
-const FOODS = [
-  "麻辣香锅", "麻辣烫", "火锅", "冒菜", "面条", "米线", "披萨", "炸鸡", "螺蛳粉",
-  "剁椒拌饭", "饺子", "抄手", "盖饭", "炒饭", "日料", "拌饭", "部队锅", "烤肉",
-  "烤冷面", "臭豆腐", "煎饼果子", "黄焖鸡", "轻食", "不吃", "喝粥", "烧烤", "钵钵鸡",
-  "凉面", "炒菜", "烤肉拌饭", "里脊饼", "酸辣粉", "鸭血粉丝汤", "土豆粉", "卤肉饭",
-  "馄饨", "拉面", "烩面", "热干面", "刀削面", "油泼面", "炸酱面", "炒面", "重庆小面",
-  "螺狮粉", "凉皮儿", "肉夹馍", "羊肉汤", "盖浇饭", "烤肉饭", "黄焖鸡米饭", "驴肉火烧",
-  "川菜", "酸菜鱼", "烤串", "烤鸭", "汉堡", "寿司", "蟹黄包", "生煎", "炒年糕",
-];
+function toast(msg) {
+  const t = $("toast");
+  t.textContent = msg; t.style.display = "block";
+  setTimeout(() => (t.style.display = "none"), 3500);
+}
+function escapeHtml(s) {
+  return String(s ?? "").replace(/[&<>"']/g, (c) =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+const LANG_COLORS = {
+  "Python": "#3572A5", "Rust": "#dea584", "TypeScript": "#3178c6", "Go": "#00ADD8",
+  "C++": "#f34b7d", "HTML": "#e34c26", "JavaScript": "#f1e05a", "Java": "#b07219",
+  "C": "#555555", "C#": "#178600", "Shell": "#89e051", "Vue": "#41b883",
+  "Kotlin": "#A97BFF", "Swift": "#F05138", "Ruby": "#701516", "Zig": "#ec915c",
+};
+const REPO_LINE = /^([A-Za-z0-9._-]+\/[A-Za-z0-9._-]+)\s*★\s*([\d,]+)\s*[・·]\s*(.+)$/;
+
+function repoRowHtml(m, rank) {
+  const dotColor = LANG_COLORS[m[3]] || "#8b8b93";
+  return `<a class="repo" href="https://github.com/${m[1]}" target="_blank" rel="noopener">
+    <span class="rank">${String(rank).padStart(2, "0")}</span>
+    <span class="rname">${escapeHtml(m[1])}</span>
+    <span class="stars">★ ${m[2]}</span>
+    <span class="lang"><i class="dot" style="background:${dotColor}"></i>${escapeHtml(m[3])}</span>
+  </a>`;
+}
+
+// ---- 吃什么：清单来自 worker 配置，可编辑 ----
+const FALLBACK_FOODS = ["麻辣烫", "火锅", "面条", "黄焖鸡", "沙拉", "不吃"];
+let FOODS = FALLBACK_FOODS;
+async function loadFoods() {
+  try {
+    const res = await fetch(`${ENDPOINT}/api/public/config/foods`);
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data.foods) && data.foods.length) FOODS = data.foods;
+    }
+  } catch { /* 用默认清单 */ }
+  showFood(daySeed());
+}
 function daySeed() {
   const d = new Date();
   const s = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
@@ -277,11 +386,7 @@ function daySeed() {
   for (const c of s) h = (h * 31 + c.charCodeAt(0)) >>> 0;
   return h;
 }
-function showFood(i) {
-  $("foodName").textContent = FOODS[i % FOODS.length];
-}
-showFood(daySeed());
-// 轮盘滚起来时满屏飘食物词，停住后渐隐（参考 sync/html 老版效果）
+function showFood(i) { $("foodName").textContent = FOODS[i % FOODS.length]; }
 function scatter(word) {
   const span = document.createElement("span");
   span.className = "temp";
@@ -307,27 +412,74 @@ $("reroll").onclick = () => {
   let tick = 0;
   const timer = setInterval(() => {
     const word = FOODS[Math.floor(Math.random() * FOODS.length)];
-    showFood(FOODS.indexOf(word));
+    $("foodName").textContent = word;
     scatter(word);
     if (++tick > 16) {
       clearInterval(timer);
       rolling = false;
       body.classList.remove("rolling");
       body.classList.remove("settled");
-      void body.offsetWidth; // 重启动画
+      void body.offsetWidth;
       body.classList.add("settled");
       title.textContent = "就吃这个！";
     }
   }, 50);
 };
 document.addEventListener("keydown", (e) => {
-  if (e.key === "Enter") $("reroll").click();
+  if (e.key === "Enter" && !$("foodDialog").open) $("reroll").click();
 });
+
+// 编辑清单：读 worker 配置，PUT 回写（HMAC 签名）
+async function sha256Hex(str) {
+  const d = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
+  return [...new Uint8Array(d)].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+async function sign(method, pathWithQuery, body) {
+  const secret = localStorage.getItem(LS_SECRET) || "";
+  const ts = String(Math.floor(Date.now() / 1000));
+  const nonce = crypto.randomUUID().replace(/-/g, "");
+  const canonical = `${method}\n${pathWithQuery}\n${ts}\n${nonce}\n${body ? await sha256Hex(body) : "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"}`;
+  const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(secret),
+    { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  const sig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(canonical));
+  return {
+    "X-Auth-Timestamp": ts,
+    "X-Auth-Nonce": nonce,
+    "X-Auth-Signature": [...new Uint8Array(sig)].map((b) => b.toString(16).padStart(2, "0")).join(""),
+  };
+}
+$("foodEdit").onclick = () => {
+  $("foodListText").value = FOODS.join(" ");
+  if (!localStorage.getItem(LS_SECRET)) $("secretInput").value = "";
+  $("foodDialog").showModal();
+};
+$("foodCancel").onclick = () => $("foodDialog").close();
+$("foodSave").onclick = async () => {
+  const raw = $("foodListText").value.split(/\s+/).map((s) => s.trim()).filter(Boolean);
+  if (!raw.length) return toast("清单不能为空");
+  const secret = $("secretInput").value.trim();
+  if (secret) localStorage.setItem(LS_SECRET, secret);
+  if (!localStorage.getItem(LS_SECRET)) return toast("先填 API_SECRET");
+  const body = JSON.stringify({ foods: raw });
+  try {
+    const res = await fetch(`${ENDPOINT}/api/config/foods`, {
+      method: "PUT", body,
+      headers: { "Content-Type": "application/json", ...(await sign("PUT", "/api/config/foods", body)) },
+    });
+    if (res.status === 401) throw new Error("密钥不对");
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    FOODS = raw;
+    $("foodDialog").close();
+    toast(`已保存 ${raw.length} 个选项`);
+  } catch (e) {
+    toast("保存失败：" + e.message);
+  }
+};
 
 // ---- 周末倒计时 ----
 (function weekend() {
   const now = new Date();
-  const dow = now.getDay(); // 0=周日 6=周六
+  const dow = now.getDay();
   const days = (6 - dow + 7) % 7;
   const $days = $("weekendDays"), $unit = $("weekendUnit"), $sub = $("weekendSub");
   if (dow === 6 || dow === 0) {
@@ -342,33 +494,63 @@ document.addEventListener("keydown", (e) => {
   $sub.textContent = `${sat.getFullYear()}.${String(sat.getMonth() + 1).padStart(2, "0")}.${String(sat.getDate()).padStart(2, "0")} 周六`;
 })();
 
-const LANG_COLORS = {
-  "Python": "#3572A5", "Rust": "#dea584", "TypeScript": "#3178c6", "Go": "#00ADD8",
-  "C++": "#f34b7d", "HTML": "#e34c26", "JavaScript": "#f1e05a", "Java": "#b07219",
-  "C": "#555555", "C#": "#178600", "Shell": "#89e051", "Vue": "#41b883",
-  "Kotlin": "#A97BFF", "Swift": "#F05138", "Ruby": "#701516", "Zig": "#ec915c",
-};
+// ---- 北京天气（Open-Meteo，免密钥） ----
+const WMO = { 0: "☀️ 晴", 1: "🌤 晴间多云", 2: "⛅ 多云", 3: "☁️ 阴", 45: "🌫 雾", 48: "🌫 雾凇",
+  51: "🌦 毛毛雨", 53: "🌦 毛毛雨", 55: "🌦 毛毛雨", 56: "🌧 冻雨", 57: "🌧 冻雨",
+  61: "🌧 小雨", 63: "🌧 中雨", 65: "🌧 大雨", 66: "🌧 冻雨", 67: "🌧 冻雨",
+  71: "🌨 小雪", 73: "🌨 中雪", 75: "🌨 大雪", 77: "🌨 雪粒", 80: "🌧 阵雨", 81: "🌧 阵雨",
+  82: "🌧 强阵雨", 85: "🌨 阵雪", 86: "🌨 阵雪", 95: "⛈ 雷雨", 96: "⛈ 雷雨冰雹", 99: "⛈ 雷雨冰雹" };
+(async function weather() {
+  try {
+    const res = await fetch("https://api.open-meteo.com/v1/forecast?latitude=39.9042&longitude=116.4074&current=temperature_2m,weather_code&timezone=Asia%2FShanghai");
+    if (!res.ok) throw new Error();
+    const d = await res.json();
+    const code = d.current?.weather_code;
+    const t = Math.round(d.current?.temperature_2m);
+    $("weather").textContent = `${WMO[code] || "🌡"} ${t}°C`;
+  } catch { $("weather").textContent = "—"; }
+})();
 
-function toast(msg) {
-  const t = $("toast");
-  t.textContent = msg; t.style.display = "block";
-  setTimeout(() => (t.style.display = "none"), 3500);
-}
+// ---- 一言（hitokoto，免密钥） ----
+(async function hitokoto() {
+  try {
+    const res = await fetch("https://v1.hitokoto.cn/?c=d&c=i&c=k");
+    if (!res.ok) throw new Error();
+    const d = await res.json();
+    $("hitokoto").textContent = d.hitokoto;
+    $("hitokotoFrom").textContent = d.from ? `—— ${d.from}` : "";
+  } catch {
+    $("hitokoto").textContent = "今天也要加油。";
+    $("hitokotoFrom").textContent = "";
+  }
+})();
 
-function escapeHtml(s) {
-  return String(s ?? "").replace(/[&<>"']/g, (c) =>
-    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-}
+// ---- 节假日倒计时 ----
+(function holiday() {
+  const list = [
+    { name: "国庆", date: "2026-10-01" },
+    { name: "元旦", date: "2027-01-01" },
+  ];
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  let next = null, days = Infinity;
+  for (const h of list) {
+    const d = new Date(h.date + "T00:00:00+08:00");
+    const diff = Math.ceil((d - today) / 86400000);
+    if (diff >= 0 && diff < days) { days = diff; next = h; }
+  }
+  if (!next) return;
+  $("holidayTitle").textContent = `距离${next.name}`;
+  $("holidayVal").textContent = days === 0 ? `${next.name}就是今天 🎉` : `${days} 天`;
+})();
 
+// ---- 笔记流：trending 标签的进独立面板，其余进笔记流 ----
 function renderContent(content) {
   const blocks = String(content || "").split(/\n{2,}/);
   const out = [];
   let rank = 0;
   for (const block of blocks) {
     const lines = block.split("\n").map((l) => l.trim()).filter(Boolean);
-    const m = lines.length >= 1
-      ? lines[0].match(/^([A-Za-z0-9._-]+\/[A-Za-z0-9._-]+)\s*★\s*([\d,]+)\s*[・·]\s*(.+)$/)
-      : null;
+    const m = lines.length >= 1 ? lines[0].match(REPO_LINE) : null;
     if (m) {
       rank += 1;
       const desc = lines.slice(1).join(" ");
@@ -400,6 +582,32 @@ function noteHtml(n) {
   </article>`;
 }
 
+function trendingHtml(item) {
+  const date = (item.created_at || "").slice(0, 10).replace(/-/g, ".");
+  const blocks = String(item.content || "").split(/\n{2,}/);
+  const rows = [];
+  let rank = 0;
+  for (const block of blocks) {
+    const lines = block.split("\n").map((l) => l.trim()).filter(Boolean);
+    const m = lines[0]?.match(REPO_LINE);
+    if (m) rows.push(repoRowHtml(m, ++rank));
+  }
+  if (!rows.length) return "";
+  const hidden = rows.slice(5).join("");
+  const visible = rows.slice(0, 5).join("");
+  const moreBtn = rows.length > 5
+    ? `<button class="expand-btn" data-expand="trendingMore">展开全部 ${rows.length} 个 ▾</button>` : "";
+  return `<section class="panel" id="trendingPanel">
+    <div class="panel-head">
+      <h2>GitHub 每日热门</h2>
+      <span class="date">${date}</span>
+    </div>
+    ${visible}
+    <div id="trendingMore" style="display:none">${hidden}</div>
+    ${moreBtn}
+  </section>`;
+}
+
 async function load(append) {
   try {
     const p = new URLSearchParams({ limit: "10" });
@@ -407,8 +615,18 @@ async function load(append) {
     const res = await fetch(`${ENDPOINT}/api/public/memories?${p}`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
-    if (!append) $("feed").innerHTML = "";
-    $("feed").insertAdjacentHTML("beforeend", (data.items || []).map(noteHtml).join(""));
+    const items = data.items || [];
+
+    // trending 拆出来（只在首屏渲染一次）
+    if (!append) {
+      const trending = items.filter((i) => (i.tags || []).includes("trending"));
+      const notes = items.filter((i) => !(i.tags || []).includes("trending"));
+      $("trending").innerHTML = trending.map(trendingHtml).join("");
+      $("feed").innerHTML = notes.map(noteHtml).join("");
+    } else {
+      $("feed").insertAdjacentHTML("beforeend", items.filter((i) => !(i.tags || []).includes("trending")).map(noteHtml).join(""));
+    }
+
     afterId = data.next_after_id;
     const total = $("feed").querySelectorAll(".note").length;
     $("more").style.display = data.next_after_id ? "block" : "none";
@@ -422,7 +640,15 @@ async function load(append) {
 }
 
 $("more").onclick = () => load(true);
+document.addEventListener("click", (e) => {
+  const btn = e.target.closest("[data-expand]");
+  if (!btn) return;
+  const target = $(btn.dataset.expand);
+  target.style.display = target.style.display === "none" ? "" : "none";
+  btn.textContent = target.style.display === "none" ? `展开全部 ${btn.textContent.match(/\d+/)?.[0] ?? ""} 个 ▾` : "收起 ▴";
+});
 load(false);
+loadFoods();
 </script>
 </body>
 </html>
