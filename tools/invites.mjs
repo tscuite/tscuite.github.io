@@ -6,7 +6,7 @@ import { createHmac, createHash, randomBytes } from "node:crypto";
 import { homedir } from "node:os";
 import { join } from "node:path";
 
-const GATEWAY = "https://site-api.tscuite.workers.dev";
+const GATEWAY = "https://memory.tscuite.workers.dev";
 const count = Math.min(20, Math.max(1, Number.parseInt(process.argv[2], 10) || 1));
 const secretsFile = join(homedir(), ".agents", "secrets.env");
 const line = readFileSync(secretsFile, "utf8")
