@@ -68,6 +68,32 @@
 
   main { max-width: 680px; margin: 0 auto; padding: 32px 20px 72px; }
 
+  /* 小部件区 */
+  .widgets { display: grid; grid-template-columns: 1.4fr 1fr; gap: 12px; margin-bottom: 40px; }
+  .widget {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+    padding: 16px 18px;
+  }
+  .widget .w-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .widget .w-title { font: 12px var(--mono); color: var(--faint); letter-spacing: 0.04em; }
+  .w-btn {
+    background: none; border: 1px solid var(--line-strong); color: var(--muted);
+    font: 11.5px var(--mono); border-radius: 7px; padding: 3px 10px; cursor: pointer;
+    transition: color .15s, border-color .15s;
+  }
+  .w-btn:hover { color: var(--fg); border-color: var(--muted); }
+  .food-body { display: flex; align-items: center; gap: 14px; min-height: 46px; }
+  .food-emoji { font-size: 30px; line-height: 1; }
+  .food-name { font-size: 19px; font-weight: 700; letter-spacing: 0.01em; }
+  .food-body.rolling .food-name { color: var(--muted); }
+  .food-body.settled { animation: pop .35s ease; }
+  @keyframes pop { 40% { transform: scale(1.05); } }
+  .weekend-body { display: flex; align-items: baseline; gap: 8px; min-height: 46px; }
+  .weekend-big { font: 700 30px/1 var(--mono); color: var(--accent); }
+  .weekend-unit { font-size: 13.5px; color: var(--muted); }
+  .weekend-sub { display: block; margin-top: 6px; font: 11.5px var(--mono); color: var(--faint); }
+  @media (max-width: 520px) { .widgets { grid-template-columns: 1fr; } }
+
   .note { margin-bottom: 36px; }
   .note-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
   .note-head .date {
@@ -184,6 +210,27 @@
 </header>
 
 <main>
+  <section class="widgets">
+    <div class="widget">
+      <div class="w-head">
+        <span class="w-title">今天吃什么</span>
+        <button class="w-btn" id="reroll">换一个</button>
+      </div>
+      <div class="food-body" id="foodBody">
+        <span class="food-emoji" id="foodEmoji">🍜</span>
+        <span class="food-name" id="foodName">……</span>
+      </div>
+    </div>
+    <div class="widget">
+      <div class="w-head"><span class="w-title">周末倒计时</span></div>
+      <div class="weekend-body">
+        <span class="weekend-big" id="weekendDays">-</span>
+        <span class="weekend-unit" id="weekendUnit"></span>
+      </div>
+      <span class="weekend-sub" id="weekendSub"></span>
+    </div>
+  </section>
+
   <div id="feed"></div>
   <div class="empty" id="empty" style="display:none">还没有公开笔记。写一条 namespace=public 的记忆，就会出现在这里。</div>
   <button id="more" style="display:none">加载更多</button>
@@ -200,6 +247,67 @@
 const ENDPOINT = "https://memory.tscuite.workers.dev";
 const $ = (id) => document.getElementById(id);
 let afterId = null;
+
+// ---- 今天吃什么：按日期确定性出结果，当天不变，可手动换一个 ----
+const FOODS = [
+  ["黄焖鸡米饭", "🍗"], ["兰州拉面", "🍜"], ["麻辣烫", "🌶️"], ["沙县小吃", "🍚"],
+  ["麦当劳", "🍟"], ["轻食沙拉", "🥗"], ["螺蛳粉", "🍲"], ["饺砸", "🥟"],
+  ["盖浇饭", "🍛"], ["火锅", "🍲"], ["烤鱼", "🐟"], ["煲仔饭", "🍚"],
+  ["汉堡王", "🍔"], ["麻辣香锅", "🥘"], ["寿司", "🍣"], ["拉面", "🍥"],
+  ["烤冷面", "🥡"], ["烤肉拌饭", "🥩"], ["兰州炒面", "🍝"], ["馄饨", "🥠"],
+  ["冒菜", "🥬"], ["炸鸡", "🍗"], ["披萨", "🍕"], ["面条", "🍜"],
+  ["煎饼果子", "🥞"], ["猪脚饭", "🍖"], ["煲汤", "🥣"], ["食堂", "🏫"],
+];
+function daySeed() {
+  const d = new Date();
+  const s = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+  let h = 0;
+  for (const c of s) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  return h;
+}
+function showFood(i) {
+  const [name, emoji] = FOODS[i % FOODS.length];
+  $("foodName").textContent = name;
+  $("foodEmoji").textContent = emoji;
+}
+showFood(daySeed());
+let rolling = false;
+$("reroll").onclick = () => {
+  if (rolling) return;
+  rolling = true;
+  const body = $("foodBody");
+  body.classList.add("rolling");
+  let tick = 0;
+  const timer = setInterval(() => {
+    showFood(Math.floor(Math.random() * FOODS.length));
+    if (++tick > 12) {
+      clearInterval(timer);
+      rolling = false;
+      body.classList.remove("rolling");
+      body.classList.remove("settled");
+      void body.offsetWidth; // 重启动画
+      body.classList.add("settled");
+    }
+  }, 70);
+};
+
+// ---- 周末倒计时 ----
+(function weekend() {
+  const now = new Date();
+  const dow = now.getDay(); // 0=周日 6=周六
+  const days = (6 - dow + 7) % 7;
+  const $days = $("weekendDays"), $unit = $("weekendUnit"), $sub = $("weekendSub");
+  if (dow === 6 || dow === 0) {
+    $days.textContent = "🎉";
+    $unit.textContent = "就是今天！";
+    $sub.textContent = "周末愉快";
+    return;
+  }
+  const sat = new Date(now.getTime() + days * 86400000);
+  $days.textContent = days;
+  $unit.textContent = "天后是周末";
+  $sub.textContent = `${sat.getFullYear()}.${String(sat.getMonth() + 1).padStart(2, "0")}.${String(sat.getDate()).padStart(2, "0")} 周六`;
+})();
 
 const LANG_COLORS = {
   "Python": "#3572A5", "Rust": "#dea584", "TypeScript": "#3178c6", "Go": "#00ADD8",
