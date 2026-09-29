@@ -280,6 +280,8 @@ function renderRepositories() {
   }
   $("repoGrid").replaceChildren(fragment);
   $("repoGrid").setAttribute("aria-busy", "false");
+  $("repoGrid").scrollLeft = 0;
+  updateScrollButtons();
   $("projectMessage").hidden = visible.length > 0;
   $("projectMessage").textContent = repos.length ? "没有匹配的项目，试试其他关键词。" : "还没有公开的项目快照。";
   $("repoCount").textContent = repos.length ? `${visible.length} / ${repos.length} 个项目` : "GitHub Search API 数据快照";
@@ -294,6 +296,15 @@ function renderFilters() {
     return button;
   }));
 }
+// 横向滚动：左右箭头 + 边界禁用
+function updateScrollButtons() {
+  const grid = $("repoGrid");
+  $("scrollPrev").disabled = grid.scrollLeft <= 0;
+  $("scrollNext").disabled = grid.scrollLeft >= grid.scrollWidth - grid.clientWidth - 4;
+}
+$("scrollPrev").onclick = () => $("repoGrid").scrollBy({ left: -270, behavior: "smooth" });
+$("scrollNext").onclick = () => $("repoGrid").scrollBy({ left: 270, behavior: "smooth" });
+$("repoGrid").addEventListener("scroll", updateScrollButtons, { passive: true });
 $("languageFilters").onclick = event => {
   const button = event.target.closest("[data-language]");
   if (!button) return;
