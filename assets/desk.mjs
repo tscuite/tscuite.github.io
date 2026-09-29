@@ -256,12 +256,10 @@ async function loadQuote() {
   } catch { $("hitokoto").textContent = "一言暂时没有连接上。"; $("hitokotoFrom").textContent = ""; }
 }
 
-let items = new Map(), afterId = null, loading = false, repos = [], language = "";
+let items = new Map(), afterId = null, loading = false, repos = [];
 function renderRepositories() {
-  const query = $("repoSearch").value.trim().toLowerCase();
-  const visible = repos.filter(repo => (!language || repo.language === language) && `${repo.name} ${repo.description}`.toLowerCase().includes(query));
   const fragment = document.createDocumentFragment();
-  for (const repo of visible) {
+  for (const repo of repos) {
     const link = element("a", "repo");
     link.href = repo.url; link.target = "_blank"; link.rel = "noopener noreferrer";
     const [owner, name] = repo.name.split("/");
@@ -282,19 +280,9 @@ function renderRepositories() {
   $("repoGrid").setAttribute("aria-busy", "false");
   $("repoGrid").scrollLeft = 0;
   updateScrollButtons();
-  $("projectMessage").hidden = visible.length > 0;
-  $("projectMessage").textContent = repos.length ? "没有匹配的项目，试试其他关键词。" : "还没有公开的项目快照。";
-  $("repoCount").textContent = repos.length ? `${visible.length} / ${repos.length} 个项目` : "GitHub Search API 数据快照";
-}
-function renderFilters() {
-  const values = ["", ...new Set(repos.map(repo => repo.language))];
-  if (!values.includes(language)) language = "";
-  $("languageFilters").replaceChildren(...values.map(value => {
-    const button = element("button", `filter${language === value ? " active" : ""}`, value || "全部");
-    button.dataset.language = value;
-    button.setAttribute("aria-pressed", String(language === value));
-    return button;
-  }));
+  $("projectMessage").hidden = repos.length > 0;
+  $("projectMessage").textContent = "还没有公开的项目快照。";
+  $("repoCount").textContent = repos.length ? `${repos.length} 个项目 · 每日更新` : "GitHub Search API 数据快照";
 }
 // 横向滚动：左右箭头 + 边界禁用
 function updateScrollButtons() {
@@ -305,12 +293,6 @@ function updateScrollButtons() {
 $("scrollPrev").onclick = () => $("repoGrid").scrollBy({ left: -270, behavior: "smooth" });
 $("scrollNext").onclick = () => $("repoGrid").scrollBy({ left: 270, behavior: "smooth" });
 $("repoGrid").addEventListener("scroll", updateScrollButtons, { passive: true });
-$("languageFilters").onclick = event => {
-  const button = event.target.closest("[data-language]");
-  if (!button) return;
-  language = button.dataset.language; renderFilters(); renderRepositories();
-};
-$("repoSearch").oninput = renderRepositories;
 function renderNote(item) {
   const article = element("article", "note");
   article.append(element("h2", "", item.subject || "未命名笔记"), element("time", "", String(item.created_at || "").slice(0, 10)));
@@ -332,7 +314,7 @@ function renderItems() {
   repos = latest ? parseRepositories(latest.content).map((repo, index) => ({ ...repo, rank: index + 1 })) : [];
   const date = latest?.subject?.match(/\d{4}-\d{2}-\d{2}/)?.[0] || String(latest?.created_at || "").slice(0, 10);
   $("digestInfo").textContent = latest ? `${date} 快照 · 近 7 天新建 · 按 Star 排序（非实时榜单）` : "近 7 天新创建的项目，按 Star 排序。";
-  renderFilters(); renderRepositories();
+  renderRepositories();
   const notes = entries.filter(item => !isTrending(item));
   $("feed").replaceChildren(...notes.map(renderNote));
   $("notesSection").hidden = !notes.length;
