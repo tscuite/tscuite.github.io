@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>笔记 · tscuite</title>
+<style>
+  :root {
+    --bg: #f7f7f5;
+    --fg: #1a1a1a;
+    --muted: #6b6b6b;
+    --card: #ffffff;
+    --accent: #2563eb;
+    --border: #e5e5e0;
+    --mem: #2563eb;
+    --user: #15803d;
+    --fail: #b91c1c;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #101014;
+      --fg: #e8e8ea;
+      --muted: #9a9aa2;
+      --card: #1a1a20;
+      --accent: #6ea8ff;
+      --border: #2a2a32;
+      --mem: #6ea8ff;
+      --user: #6fd08c;
+      --fail: #ff7a7a;
+    }
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+                 "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    background: var(--bg); color: var(--fg);
+    min-height: 100vh; line-height: 1.6;
+  }
+  .wrap { max-width: 680px; margin: 0 auto; padding: 40px 20px 80px; }
+  header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 32px; }
+  h1 { font-size: 24px; letter-spacing: 0.02em; }
+  header a { color: var(--accent); text-decoration: none; font-size: 14px; }
+  .note {
+    background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+    padding: 20px; margin-bottom: 14px;
+  }
+  .note h2 { font-size: 17px; margin-bottom: 8px; }
+  .note .content { white-space: pre-wrap; word-break: break-word; font-size: 15px; }
+  .note .meta { display: flex; align-items: center; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+  .badge { font: 11px var(--mono); padding: 2px 8px; border-radius: 4px; color: var(--muted); border: 1px solid var(--border); }
+  .badge.memory { color: var(--mem); }
+  .badge.user { color: var(--user); }
+  .badge.failure { color: var(--fail); }
+  .time { font: 12px var(--mono); color: var(--muted); margin-left: auto; }
+  #more {
+    display: block; width: 100%; margin-top: 8px; padding: 10px;
+    background: var(--card); border: 1px solid var(--border); color: var(--muted);
+    border-radius: 8px; cursor: pointer; font-size: 14px;
+  }
+  #more:hover { color: var(--fg); }
+  .empty { color: var(--muted); text-align: center; padding: 60px 0; font-size: 14px; }
+  #toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    background: var(--fail); color: #fff; padding: 8px 16px; border-radius: 8px;
+    font-size: 14px; display: none; max-width: 90vw;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>笔记</h1>
+    <a href="/">← tscuite</a>
+  </header>
+  <div id="list"></div>
+  <button id="more" style="display:none">加载更多</button>
+  <div class="empty" id="empty" style="display:none">还没有公开笔记</div>
+</div>
+<div id="toast"></div>
+
+<script>
+const ENDPOINT = "https://memory.tscuite.workers.dev";
+const $ = (id) => document.getElementById(id);
+let afterId = null;
+
+function toast(msg) {
+  const t = $("toast");
+  t.textContent = msg; t.style.display = "block";
+  setTimeout(() => (t.style.display = "none"), 3500);
+}
+
+function escapeHtml(s) {
+  return String(s ?? "").replace(/[&<>"']/g, (c) =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+function noteHtml(n) {
+  const tags = (n.tags || []).map((t) => `<span class="badge">#${escapeHtml(t)}</span>`).join("");
+  const date = (n.created_at || "").slice(0, 10);
+  return `<div class="note">
+    <h2>${escapeHtml(n.subject || "（无标题）")}</h2>
+    <div class="content">${escapeHtml(n.content || "")}</div>
+    <div class="meta">
+      ${n.target && n.target !== "memory" ? `<span class="badge ${n.target}">${n.target}</span>` : ""}
+      ${n.category ? `<span class="badge">${escapeHtml(n.category)}</span>` : ""}
+      ${tags}
+      <span class="time">${date}</span>
+    </div>
+  </div>`;
+}
+
+async function load(append) {
+  try {
+    const p = new URLSearchParams({ limit: "20" });
+    if (afterId) p.set("after_id", afterId);
+    const res = await fetch(`${ENDPOINT}/api/public/memories?${p}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    if (!append) $("list").innerHTML = "";
+    $("list").insertAdjacentHTML("beforeend", (data.items || []).map(noteHtml).join(""));
+    afterId = data.next_after_id;
+    $("more").style.display = data.next_after_id ? "block" : "none";
+    $("empty").style.display = $("list").children.length ? "none" : "block";
+  } catch (e) {
+    toast("加载失败：" + e.message);
+    $("empty").style.display = "block";
+  }
+}
+
+$("more").onclick = () => load(true);
+load(false);
+</script>
+</body>
+</html>
