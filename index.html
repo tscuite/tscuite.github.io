@@ -116,12 +116,15 @@
   <div class="chat-log" id="chatLog" aria-live="polite"></div>
   <div class="bomb-box">
     <div class="bomb-head"><span>💣 数字炸弹</span><span class="quiet" id="bombRange">未开局</span></div>
+    <div class="bomb-bar"><i id="bombBar"></i></div>
     <div class="bomb-row">
       <input id="bombGuess" type="number" min="1" max="100" placeholder="登录后可猜数" disabled aria-label="猜数字">
       <button class="primary" id="bombStart" disabled>开局</button>
     </div>
     <p class="field-hint" id="bombStatus"></p>
+    <div class="bomb-scores" id="bombScores"></div>
   </div>
+  <label class="ai-toggle" id="aiToggleWrap" hidden><input type="checkbox" id="aiToggle"> 小助手回复我</label>
   <form class="chat-form" id="chatForm">
     <label class="search"><input id="chatInput" placeholder="说点什么…" autocomplete="off" aria-label="聊天输入" disabled></label>
     <button class="primary" id="chatSend" type="submit" disabled>发送</button>

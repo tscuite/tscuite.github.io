@@ -41,15 +41,17 @@ export function updateChat(user) {
     $("chatSend").disabled = false;
     $("chatInput").placeholder = "说点什么…";
     $("chatStatus").textContent = "连接中…";
+    $("aiToggleWrap").hidden = false;
     connectAuthed();
     return;
   }
-  // 匿名留言模式：可发消息，回复只有自己可见（AI 小助手私聊）
+  // 匿名：只记录，不回复，也看不到别人的消息
   $("chatInput").disabled = false;
   $("chatSend").disabled = false;
-  $("chatInput").placeholder = "匿名留言，小助手会回复你…";
-  $("chatStatus").textContent = "匿名留言模式";
-  $("chatLog").replaceChildren(el("div", "chat-system", "登录后可进入聊天室；匿名留言只有你和 AI 小助手能看到"));
+  $("chatInput").placeholder = "匿名留言，只记录不回复…";
+  $("chatStatus").textContent = "匿名留言模式 · 仅记录";
+  $("aiToggleWrap").hidden = true;
+  $("chatLog").replaceChildren(el("div", "chat-system", "登录后可进入聊天室和游戏；匿名留言只被记录"));
   connectGuest();
 }
 
@@ -105,16 +107,34 @@ function renderSystem(text) {
 function renderGame(game, by) {
   if (!game) {
     $("bombRange").textContent = "未开局";
+    $("bombBar").style.width = "0%";
     $("bombStatus").textContent = "";
     return;
   }
-  $("bombRange").textContent = game.over ? "本局结束" : `${game.min} ~ ${game.max}`;
+  if (game.over) {
+    $("bombRange").textContent = "本局结束";
+    $("bombBar").style.width = "0%";
+  } else {
+    $("bombRange").textContent = `${game.min} ~ ${game.max}`;
+    $("bombBar").style.width = `${Math.max(3, ((game.max - game.min) / 98) * 100)}%`;
+  }
   if (by) $("bombStatus").textContent = `${by} 猜了，区间收窄到 ${game.min}~${game.max}`;
+  renderScores(game.scores);
+}
+function renderScores(scores) {
+  const entries = Object.entries(scores || {}).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  $("bombScores").replaceChildren(...entries.map(([name, wins]) => el("span", "score-pill", `${name} ${wins} 分`)));
 }
 function renderBoom(data) {
   $("bombRange").textContent = `本局结束 · ${data.number}`;
-  $("bombStatus").textContent = `💥 ${data.winner} 踩中了炸弹！点「开局」再来一局`;
-  renderSystem(`💥 ${data.winner} 踩中数字 ${data.number}`);
+  $("bombBar").style.width = "0%";
+  $("bombStatus").textContent = `💥 ${data.winner} 踩中了炸弹！4 秒后自动开局`;
+  renderSystem(`💥 ${data.winner} 踩中数字 ${data.number}，+1 分`);
+  if (data.game) renderScores(data.game.scores);
+  const win = $("chatWindow");
+  win.classList.remove("shake");
+  void win.offsetWidth;
+  win.classList.add("shake");
 }
 
 function handle(data) {
@@ -147,9 +167,9 @@ $("chatForm").onsubmit = (e) => {
   e.preventDefault();
   const text = $("chatInput").value.trim();
   if (!text || !socket || socket.readyState !== 1) return;
-  socket.send(JSON.stringify({ type: "chat", text }));
+  socket.send(JSON.stringify({ type: "chat", text, ai: Boolean(me && $("aiToggle").checked) }));
   $("chatInput").value = "";
-  // 游客消息不会被回显，本地补一条，AI 回复随后到达
+  // 游客消息不会被回显，本地补一条
   if (!me) renderChat({ user: "我", text, ts: Date.now() });
 };
 $("bombStart").onclick = () => {
