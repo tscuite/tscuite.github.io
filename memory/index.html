@@ -109,17 +109,18 @@
 <div class="wrap">
   <header>
     <div class="wordmark">MEMORY<span>_</span></div>
-    <button class="secret-state" id="secretState" title="更换密钥 / 端点"></button>
+    <a class="secret-state" href="/">返回小桌面</a>
+    <button class="secret-state" id="secretState" title="退出并清除密钥"></button>
   </header>
 
   <div id="setup">
     <h1>MEMORY_</h1>
-    <p>记忆库访问台 · 密钥只保存在本浏览器，签名在本地完成</p>
+    <p>通过站点代理访问，私有数据仍需签名鉴权</p>
+    <label for="secret">管理密钥</label>
     <input id="secret" type="password" placeholder="API_SECRET" autocomplete="off">
-    <input id="endpoint" type="text" value="https://memory.tscuite.workers.dev" autocomplete="off">
     <br><br>
     <button id="connect">连接</button>
-    <p class="hint">生产密钥在 Cloudflare：wrangler secret list 只能看到名字，值问部署的人</p>
+    <p class="hint">密钥在本地计算签名，新输入的密钥仅保留在当前标签页会话。</p>
   </div>
 
   <div id="app" style="display:none">
@@ -137,11 +138,9 @@
 <div id="drawer"><div class="drawer-panel" id="drawerPanel"></div></div>
 <div id="toast"></div>
 
-<script>
+<script type="module">
+import { api as requestAPI, savedSecret, rememberSecret, forgetSecret } from "/assets/api.mjs";
 const $ = (id) => document.getElementById(id);
-const LS_SECRET = "mem_console_secret";
-const LS_ENDPOINT = "mem_console_endpoint";
-const EMPTY_SHA = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 
 const TARGETS = [
   ["", "全部"], ["memory", "memory"], ["user", "user"], ["failure", "failure"],
@@ -151,9 +150,9 @@ const HORIZONS = [
   ["monthly", "monthly"], ["permanent", "permanent"],
 ];
 
-let secret = localStorage.getItem(LS_SECRET) || "";
-let endpoint = localStorage.getItem(LS_ENDPOINT) || "https://memory.tscuite.workers.dev";
+let secret = savedSecret();
 let state = { target: "", horizons: [], q: "", afterId: null, loading: false };
+let activeRequest;
 
 function toast(msg) {
   const t = $("toast");
@@ -161,34 +160,7 @@ function toast(msg) {
   setTimeout(() => (t.style.display = "none"), 3500);
 }
 
-async function sha256Hex(str) {
-  const d = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
-  return [...new Uint8Array(d)].map((b) => b.toString(16).padStart(2, "0")).join("");
-}
-
-async function sign(method, pathWithQuery, body) {
-  const ts = String(Math.floor(Date.now() / 1000));
-  const nonce = crypto.randomUUID().replace(/-/g, "");
-  const canonical = `${method}\n${pathWithQuery}\n${ts}\n${nonce}\n${body ? await sha256Hex(body) : EMPTY_SHA}`;
-  const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(secret),
-    { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
-  const sig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(canonical));
-  return {
-    "X-Auth-Timestamp": ts,
-    "X-Auth-Nonce": nonce,
-    "X-Auth-Signature": [...new Uint8Array(sig)].map((b) => b.toString(16).padStart(2, "0")).join(""),
-  };
-}
-
-async function api(pathWithQuery, { method = "GET", body } = {}) {
-  const res = await fetch(endpoint + pathWithQuery, {
-    method, body,
-    headers: { "Content-Type": "application/json", ...(await sign(method, pathWithQuery, body)) },
-  });
-  if (res.status === 401) { throw new Error("鉴权失败：密钥不对或已过期（±300s 时间窗）"); }
-  if (!res.ok) { throw new Error(`HTTP ${res.status}`); }
-  return res.json();
-}
+function api(path, options = {}) { return requestAPI(path, { ...options, secret }); }
 
 function relTime(iso) {
   if (!iso) return "";
@@ -218,62 +190,67 @@ function cardHtml(m) {
     <h3>${escapeHtml(m.subject || "（无标题）")}</h3>
     <div class="snippet">${escapeHtml(m.content || "")}</div>
     <div class="meta">
-      <span class="badge ${m.target || ""}">${m.target || "memory"}</span>
+      <span class="badge ${escapeHtml(m.target || "")}">${escapeHtml(m.target || "memory")}</span>
       <span class="badge">${escapeHtml(m.horizon || "daily")}</span>
       ${cat}${tags}
-      <span class="time" title="${m.created_at || ""}">${relTime(m.created_at)}</span>
+      <span class="time" title="${escapeHtml(m.created_at || "")}">${escapeHtml(relTime(m.created_at))}</span>
     </div>
   </div>`;
 }
 
 async function load(append) {
-  if (state.loading) return;
+  if (append && state.loading) return;
+  activeRequest?.abort();
+  const controller = new AbortController();
+  activeRequest = controller;
   state.loading = true;
   try {
     let data;
     if (state.q.trim().length >= 3) {
       const body = JSON.stringify({
         q: state.q.trim(), target: state.target || null,
-        horizons: state.horizons.length ? state.horizons : null, limit: 20,
-        after_id: state.afterId || null,
+        horizons: state.horizons, limit: 20, bump_reference: false,
       });
-      data = await api("/api/memories/query", { method: "POST", body });
+      data = await api("/api/memories/query", { method: "POST", body, signal: controller.signal });
     } else {
-      data = await api("/api/memories" + buildQuery());
+      data = await api("/api/memories" + buildQuery(), { signal: controller.signal });
     }
+    if (controller.signal.aborted) return;
     const items = data.items || [];
     if (!append) $("list").innerHTML = "";
     $("list").insertAdjacentHTML("beforeend", items.map(cardHtml).join(""));
-    state.afterId = data.next_after_id;
-    $("more").style.display = data.next_after_id ? "block" : "none";
+    state.afterId = state.q.trim().length >= 3 ? null : data.next_after_id;
+    $("more").style.display = state.afterId ? "block" : "none";
     $("empty").style.display = $("list").children.length ? "none" : "block";
   } catch (e) {
+    if (controller.signal.aborted) return;
     toast(e.message);
-    if (!append) { $("list").innerHTML = ""; $("empty").style.display = "block"; }
   } finally {
-    state.loading = false;
+    if (activeRequest === controller) state.loading = false;
   }
 }
 
 async function openDetail(id) {
   try {
-    const m = await api(`/api/memories/${id}`);
+    const { item: m } = await api(`/api/memories/${id}`);
+    if (!m) throw new Error("记忆不存在");
     const tags = (m.tags || []).map((t) => `#${escapeHtml(t)}`).join(" ");
-    const reason = m.failure_reason ? `<div class="kv"><b>failure_reason</b><span>${escapeHtml(m.failure_reason)}</span></div>` : "";
+    const reason = m.failure_reason ? `<b>failure_reason</b><span>${escapeHtml(m.failure_reason)}</span>` : "";
     $("drawerPanel").innerHTML = `
-      <button class="drawer-close" onclick="closeDrawer()">×</button>
+      <button class="drawer-close" id="drawerClose" aria-label="关闭详情">×</button>
       <h2>${escapeHtml(m.subject || "（无标题）")}</h2>
       <div class="content">${escapeHtml(m.content || "")}</div>
       <div class="kv">
-        <b>id</b><span>${m.id}</span>
-        <b>target</b><span>${m.target || "-"}</span>
-        <b>category</b><span>${m.category || "-"}</span>
-        <b>horizon</b><span>${m.horizon || "-"}</span>
-        <b>namespace</b><span>${m.namespace || "-"} / ${m.scope || "-"}</span>
-        <b>created</b><span>${m.created_at || "-"}</span>
+        <b>id</b><span>${escapeHtml(m.id)}</span>
+        <b>target</b><span>${escapeHtml(m.target || "-")}</span>
+        <b>category</b><span>${escapeHtml(m.category || "-")}</span>
+        <b>horizon</b><span>${escapeHtml(m.horizon || "-")}</span>
+        <b>namespace</b><span>${escapeHtml(m.namespace || "-")} / ${escapeHtml(m.scope || "-")}</span>
+        <b>created</b><span>${escapeHtml(m.created_at || "-")}</span>
         <b>tags</b><span>${tags || "-"}</span>
         ${reason}
       </div>`;
+    $("drawerClose").onclick = closeDrawer;
     $("drawer").classList.add("open");
   } catch (e) { toast(e.message); }
 }
@@ -288,27 +265,29 @@ function escapeHtml(s) {
 function showApp() {
   $("setup").style.display = "none";
   $("app").style.display = "block";
-  $("secretState").textContent = endpoint.replace(/^https?:\/\//, "") + " · 更换密钥";
+  $("secretState").textContent = "已通过代理连接 · 退出";
   load(false);
 }
 $("connect").onclick = () => {
   secret = $("secret").value.trim();
-  endpoint = $("endpoint").value.trim().replace(/\/$/, "");
   if (!secret) return toast("填一下密钥");
-  localStorage.setItem(LS_SECRET, secret);
-  localStorage.setItem(LS_ENDPOINT, endpoint);
+  rememberSecret(secret);
+  $("secret").value = "";
   showApp();
 };
 $("secretState").onclick = () => {
-  localStorage.removeItem(LS_SECRET); localStorage.removeItem(LS_ENDPOINT);
-  secret = ""; $("app").style.display = "none"; $("setup").style.display = "block";
+  activeRequest?.abort();
+  forgetSecret();
+  secret = ""; $("list").replaceChildren(); closeDrawer();
+  state.afterId = null;
+  $("app").style.display = "none"; $("setup").style.display = "block";
 };
 if (secret) showApp();
 
 // 筛选 chips
 function renderChips(container, options, active, key) {
   container.innerHTML = options.map(([v, label]) =>
-    `<span class="chip ${active.includes(v) || (v === "" && active.length === 0) ? "on" : ""}" data-v="${v}">${label}</span>`).join("");
+    `<button class="chip ${((Array.isArray(active) ? active.includes(v) : active === v) || (v === "" && active.length === 0)) ? "on" : ""}" data-v="${v}">${label}</button>`).join("");
   container.onclick = (e) => {
     const v = e.target.dataset.v;
     if (v === undefined) return;
@@ -326,11 +305,11 @@ $("more").onclick = () => load(true);
 let debounce;
 $("q").oninput = () => {
   clearTimeout(debounce);
-  debounce = setTimeout(() => { state.afterId = null; load(false); }, 350);
+  debounce = setTimeout(() => { state.q = $("q").value; state.afterId = null; load(false); }, 350);
 };
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") closeDrawer();
-  if (e.key === "/" && document.activeElement !== $("q")) { e.preventDefault(); $("q").focus(); }
+  if (e.key === "/" && !["INPUT", "TEXTAREA"].includes(document.activeElement.tagName) && $("app").style.display !== "none") { e.preventDefault(); $("q").focus(); }
 });
 document.addEventListener("click", (e) => {
   const card = e.target.closest(".card");

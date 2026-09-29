@@ -1,700 +1,85 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>tscuite</title>
-<style>
-  :root {
-    --bg: #f6f6f4;
-    --surface: #ffffff;
-    --fg: #111113;
-    --muted: #6e6e76;
-    --faint: #9c9ca4;
-    --line: #e6e6e2;
-    --line-strong: #d9d9d4;
-    --accent: #e5484d;
-    --shadow: 0 1px 2px rgba(0,0,0,.04), 0 8px 24px -12px rgba(0,0,0,.12);
-    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #0c0c0e;
-      --surface: #151517;
-      --fg: #ededef;
-      --muted: #9d9da6;
-      --faint: #6b6b73;
-      --line: #232327;
-      --line-strong: #303036;
-      --accent: #ff6369;
-      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 12px 32px -16px rgba(0,0,0,.6);
-    }
-  }
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
-                 "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
-    background: var(--bg); color: var(--fg);
-    line-height: 1.65;
-    -webkit-font-smoothing: antialiased;
-  }
-
-  header {
-    position: sticky; top: 0; z-index: 10;
-    backdrop-filter: saturate(1.4) blur(12px);
-    -webkit-backdrop-filter: saturate(1.4) blur(12px);
-    background: color-mix(in srgb, var(--bg) 78%, transparent);
-    border-bottom: 1px solid var(--line);
-  }
-  .header-inner {
-    max-width: 1100px; margin: 0 auto; padding: 14px 24px;
-    display: flex; align-items: center; justify-content: space-between;
-  }
-  .wordmark { font: 650 16px/1 var(--mono); letter-spacing: 0.02em; }
-  .wordmark .cursor {
-    display: inline-block; width: 8px; height: 15px; margin-left: 2px;
-    background: var(--accent); vertical-align: -2px;
-    animation: blink 1.2s steps(1) infinite;
-  }
-  @keyframes blink { 50% { opacity: 0; } }
-  nav { display: flex; gap: 20px; }
-  nav a { color: var(--muted); text-decoration: none; font: 13px var(--mono); transition: color .15s; }
-  nav a:hover { color: var(--fg); }
-
-  main { max-width: 1100px; margin: 0 auto; padding: 28px 24px 72px; }
-
-  /* 仪表条：吃什么 + 周末倒计时 */
-  .widgetbar {
-    display: flex; align-items: stretch;
-    background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
-    padding: 16px 20px; margin-bottom: 12px;
-  }
-  .wb-food { flex: 1.5; min-width: 0; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-  .wb-food .food-emoji { font-size: 24px; line-height: 1; }
-  .wb-food .food-name { font-size: 20px; font-weight: 700; letter-spacing: 0.01em; }
-  .wb-food .w-title { margin-right: auto; }
-  .wb-divider { width: 1px; background: var(--line); margin: 4px 22px; }
-  .wb-weekend { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 3px; }
-  .wb-weekend .line { display: flex; align-items: baseline; gap: 8px; }
-  .weekend-big { font: 700 24px/1 var(--mono); color: var(--accent); }
-  .weekend-unit { font-size: 13px; color: var(--muted); }
-  .weekend-sub { font: 11.5px var(--mono); color: var(--faint); }
-  .w-title { font: 12px var(--mono); color: var(--faint); letter-spacing: 0.04em; }
-  .w-btn {
-    background: none; border: 1px solid var(--line-strong); color: var(--muted);
-    font: 11.5px var(--mono); border-radius: 7px; padding: 4px 12px; cursor: pointer;
-    transition: color .15s, border-color .15s;
-  }
-  .w-btn:hover { color: var(--fg); border-color: var(--muted); }
-  .wb-food.rolling .food-name { color: var(--muted); }
-  .wb-food.settled { animation: pop .35s ease; }
-  @keyframes pop { 40% { transform: scale(1.02); } }
-  .temp {
-    position: fixed; z-index: 30; opacity: 0; pointer-events: none;
-    transition: opacity .45s ease; color: var(--muted);
-    font: 500 15px var(--mono); white-space: nowrap;
-  }
-  .temp.show { opacity: 1; }
-  .temp.hide { opacity: 0; }
-
-  /* 迷你组件行 */
-  .minis { display: grid; grid-template-columns: 1fr 1.2fr 1fr; gap: 12px; margin-bottom: 40px; }
-  .mini {
-    background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
-    padding: 13px 16px; min-height: 74px;
-    display: flex; flex-direction: column; justify-content: center; gap: 4px;
-  }
-  .mini .val { font-size: 17px; font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .mini .hitokoto { font-size: 13.5px; color: var(--muted); line-height: 1.5;
-    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-  .mini .from { font: 11px var(--mono); color: var(--faint); }
-
-  /* GitHub 每日热门面板 */
-  .panel {
-    background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
-    padding: 18px 20px 14px; margin-bottom: 36px;
-  }
-  .panel-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 6px; }
-  .panel-head h2 { font-size: 15.5px; font-weight: 650; }
-  .panel-head .date { font: 12px var(--mono); color: var(--faint); }
-  .panel .repo-grid {
-    display: grid; grid-template-columns: 1fr 1fr; column-gap: 28px;
-  }
-  .panel .repo {
-    display: grid;
-    grid-template-columns: 30px 1fr auto auto;
-    grid-template-areas: "rank name stars lang";
-    column-gap: 12px;
-    align-items: baseline;
-    text-decoration: none;
-    padding: 9px 8px;
-    border-radius: 8px;
-    transition: background .12s;
-  }
-  .panel .repo:hover { background: color-mix(in srgb, var(--fg) 4%, transparent); }
-  .panel .repo .rank { grid-area: rank; font: 12px var(--mono); color: var(--faint); text-align: right; }
-  .panel .repo .rname { grid-area: name; font: 600 13.5px/1.4 var(--mono); color: var(--fg); word-break: break-all; }
-  .panel .repo:hover .rname { color: var(--accent); }
-  .panel .repo .stars { grid-area: stars; font: 12px var(--mono); color: var(--muted); }
-  .panel .repo .lang { grid-area: lang; font: 11.5px var(--mono); color: var(--muted); display: flex; align-items: center; gap: 6px; }
-  .panel .dot { width: 8px; height: 8px; border-radius: 50%; }
-  .panel .desc { grid-area: desc; }
-  .expand-btn {
-    display: block; width: 100%; margin-top: 6px; padding: 8px;
-    background: none; border: none; color: var(--faint);
-    font: 12px var(--mono); cursor: pointer;
-  }
-  .expand-btn:hover { color: var(--fg); }
-
-  /* 笔记流：宽屏两列 */
-  #feed { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 28px; align-items: start; }
-  .note { margin-bottom: 0; }
-  .note-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
-  .note-head .date {
-    font: 12px var(--mono); color: var(--accent); letter-spacing: 0.06em;
-    border: 1px solid var(--line-strong); border-radius: 6px; padding: 2px 8px;
-  }
-  .note-head h2 { font-size: 17px; font-weight: 650; letter-spacing: 0.01em; }
-  .note .plain {
-    font-size: 14px; color: var(--muted); white-space: pre-wrap;
-    word-break: break-word; padding: 4px 16px;
-  }
-  .note .repo {
-    display: grid;
-    grid-template-columns: 34px 1fr auto auto;
-    grid-template-areas: "rank name stars lang" "rank desc desc desc";
-    column-gap: 12px; row-gap: 2px;
-    align-items: baseline;
-    text-decoration: none;
-    background: var(--surface); border: 1px solid var(--line);
-    border-radius: 12px; padding: 13px 16px;
-    transition: border-color .15s, transform .15s, box-shadow .15s;
-  }
-  .note .repo + .repo { margin-top: 8px; }
-  .note .repo:hover { border-color: var(--line-strong); transform: translateY(-1px); box-shadow: var(--shadow); }
-  .note .repo .rank { grid-area: rank; font: 12px var(--mono); color: var(--faint); text-align: right; }
-  .note .repo .rname { grid-area: name; font: 600 14px/1.3 var(--mono); color: var(--fg); word-break: break-all; }
-  .note .repo:hover .rname { color: var(--accent); }
-  .note .repo .arrow { color: var(--faint); opacity: 0; transition: opacity .15s; }
-  .note .repo:hover .arrow { opacity: 1; }
-  .note .repo .stars {
-    grid-area: stars; justify-self: end;
-    font: 12px var(--mono); color: var(--muted);
-    background: color-mix(in srgb, var(--fg) 5%, transparent);
-    border-radius: 6px; padding: 2px 8px;
-  }
-  .note .repo .lang {
-    grid-area: lang; justify-self: end;
-    display: flex; align-items: center; gap: 6px;
-    font: 11.5px var(--mono); color: var(--muted);
-  }
-  .note .repo .dot { width: 8px; height: 8px; border-radius: 50%; }
-  .note .repo .rdesc {
-    grid-area: desc;
-    font-size: 13.5px; color: var(--muted);
-    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
-    overflow: hidden; word-break: break-word;
-  }
-  .note .tags { margin-top: 12px; display: flex; gap: 6px; flex-wrap: wrap; }
-  .note .tag {
-    font: 11.5px var(--mono); color: var(--faint);
-    border: 1px solid var(--line); border-radius: 999px; padding: 2px 9px;
-  }
-
-  #more {
-    display: block; width: 100%; padding: 12px;
-    background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
-    color: var(--muted); font: 13px var(--mono); cursor: pointer;
-    transition: border-color .15s, color .15s;
-  }
-  #more:hover { color: var(--fg); border-color: var(--line-strong); }
-
-  .empty { text-align: center; padding: 48px 0; color: var(--faint); font: 13px var(--mono); }
-
-  footer {
-    max-width: 1100px; margin: 0 auto; padding: 20px 24px 40px;
-    border-top: 1px solid var(--line);
-    display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap;
-    color: var(--faint); font: 12px var(--mono);
-  }
-  footer a { color: var(--faint); text-decoration: none; }
-  footer a:hover { color: var(--fg); }
-
-  #toast {
-    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
-    background: var(--accent); color: #fff; padding: 9px 18px; border-radius: 10px;
-    font-size: 13.5px; display: none; max-width: 90vw; z-index: 40;
-    box-shadow: var(--shadow);
-  }
-
-  /* 编辑吃什么清单 */
-  dialog {
-    border: 1px solid var(--line-strong); border-radius: 14px;
-    background: var(--surface); color: var(--fg);
-    padding: 20px; width: min(520px, 92vw);
-  }
-  dialog::backdrop { background: rgba(0,0,0,.45); }
-  dialog h3 { font-size: 15px; margin-bottom: 12px; }
-  dialog textarea {
-    width: 100%; height: 180px; resize: vertical;
-    background: var(--bg); border: 1px solid var(--line); border-radius: 8px;
-    color: var(--fg); font: 13px/1.7 var(--mono); padding: 10px 12px; outline: none;
-  }
-  dialog textarea:focus { border-color: var(--accent); }
-  dialog input {
-    width: 100%; margin-top: 10px; padding: 8px 12px;
-    background: var(--bg); border: 1px solid var(--line); border-radius: 8px;
-    color: var(--fg); font: 13px var(--mono); outline: none;
-  }
-  dialog .dlg-hint { font: 11.5px var(--mono); color: var(--faint); margin-top: 8px; }
-  dialog .dlg-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 14px; }
-  .btn-primary {
-    background: var(--accent); color: #fff; border: none; border-radius: 8px;
-    font: 13px var(--mono); padding: 7px 16px; cursor: pointer;
-  }
-
-  @media (prefers-reduced-motion: no-preference) {
-    .note, .panel, .minis, .widgetbar { animation: rise .45s ease both; }
-    @keyframes rise { from { opacity: 0; transform: translateY(10px); } }
-  }
-  @media (max-width: 820px) {
-    .panel .repo-grid { grid-template-columns: 1fr; }
-  }
-  @media (max-width: 560px) {
-    .widgetbar { flex-direction: column; gap: 14px; }
-    .wb-divider { width: auto; height: 1px; margin: 2px 0; }
-    .minis { grid-template-columns: 1fr; }
-    #feed { grid-template-columns: 1fr; }
-  }
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="tscuite 的日常小桌面：发现 GitHub 新项目、决定今天吃什么，看看天气和下一个休息日。">
+  <meta name="color-scheme" content="light dark">
+  <title>tscuite · 小桌面</title>
+  <script>try { document.documentElement.dataset.theme = localStorage.getItem('desk-theme') || 'light'; } catch { document.documentElement.dataset.theme = 'light'; }</script>
+  <link rel="icon" href="/assets/mark.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/assets/desk.css">
+  <script type="module" src="/assets/desk.mjs"></script>
 </head>
 <body>
-<header>
-  <div class="header-inner">
-    <div class="wordmark">tscuite<span class="cursor"></span></div>
-    <nav>
-      <a href="https://github.com/tscuite">GitHub</a>
-      <a href="/memory/">Memory_</a>
-    </nav>
-  </div>
+<svg class="icon-definitions" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M6 18 18 6M6 6h12v12"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9Z"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></symbol>
+  <symbol id="i-shuffle" viewBox="0 0 24 24"><path d="M3 5h3c5 0 7 14 12 14h3m-4-4 4 4-4 4M3 19h3c2.5 0 4-3.5 5-6m2-4c1-2.5 3-4 5-4h3m-4-4 4 4-4 4"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 7v5h-5M4 17v-5h5M5 7a8 8 0 0 1 13-2l2 3M4 16l2 3a8 8 0 0 0 13-2"/></symbol>
+  <symbol id="i-edit" viewBox="0 0 24 24"><path d="m16 3 5 5-12 12H4v-5ZM13 6l5 5"/></symbol>
+</defs></svg>
+<a class="skip" href="#projects">跳到项目列表</a>
+<header class="topbar">
+  <a class="brand" href="/" aria-label="tscuite 小桌面首页"><span class="brand-mark">t.</span><span>tscuite<span class="brand-caption">小桌面</span></span></a>
+  <nav aria-label="站点导航">
+    <a class="nav-active" href="/" aria-current="page">日常</a>
+    <a href="https://github.com/tscuite" target="_blank" rel="noopener noreferrer">GitHub <svg class="icon small" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+    <a href="/memory/">私人记忆</a>
+  </nav>
+  <button class="icon-button" id="themeToggle" aria-label="切换深色模式" title="切换深色模式"><svg class="icon" aria-hidden="true"><use href="#i-sun"/></svg></button>
 </header>
-
-<main>
-  <section class="widgetbar">
-    <div class="wb-food" id="foodBody">
-      <span class="w-title" id="foodTitle">今天吃什么</span>
-      <span class="food-emoji">🍚</span>
-      <span class="food-name" id="foodName">……</span>
-      <button class="w-btn" id="reroll">换一个</button>
-      <button class="w-btn" id="foodEdit">编辑</button>
+<div class="page">
+  <div class="dateline"><time id="todayDate"></time><span>一点发现，一点生活。</span></div>
+  <main class="desktop">
+    <aside class="life" aria-label="生活工具">
+      <section class="meal" aria-labelledby="foodTitle">
+        <div class="section-top"><h2 id="foodTitle">今天吃什么</h2><button class="icon-button" id="foodEdit" aria-label="编辑吃什么清单" title="编辑清单"><svg class="icon small" aria-hidden="true"><use href="#i-edit"/></svg></button></div>
+        <div class="meal-art" aria-hidden="true"><svg viewBox="0 0 220 110"><ellipse cx="110" cy="99" rx="63" ry="7" fill="#d9a65f" opacity=".2"/><path d="M71 21c-10-12 12-12 2-24M108 21c-10-12 12-12 2-24" transform="translate(12 5)" fill="none" stroke="#bc8242" stroke-width="2" stroke-linecap="round" opacity=".6"/><path d="m155 0-30 66m51-60-41 60" stroke="#8e5c31" stroke-width="5" stroke-linecap="round"/><path d="M55 53c0-15 25-27 55-27s55 12 55 27" fill="#fffaf0"/><ellipse cx="110" cy="53" rx="62" ry="17" fill="#28565d"/><path d="M65 50c11-19 22 12 35-4s21 11 34-5 20 9 22 13" fill="none" stroke="#f4c576" stroke-width="6" stroke-linecap="round"/><path d="M80 44c-5-14 12-22 17-13 7 13-9 19-17 13" fill="#79a584"/><ellipse cx="120" cy="48" rx="10" ry="7" fill="#ee9e73"/><path d="M48 53c5 24 21 39 42 43h40c21-4 37-19 42-43-26 15-98 15-124 0" fill="#397078"/><path d="M67 75c17 10 55 14 76 0" fill="none" stroke="#81aaa3" stroke-width="2"/><path d="M91 96h38" stroke="#28565d" stroke-width="6" stroke-linecap="round"/></svg></div>
+        <div id="foodBody"><p class="food-name" id="foodName" aria-live="polite">挑一道喜欢的</p><p class="meal-hint" id="foodHint">把选择困难交给运气。</p></div>
+        <button class="meal-button" id="reroll"><svg class="icon" aria-hidden="true"><use href="#i-shuffle"/></svg><span>帮我选一个</span></button>
+        <p class="food-status" id="foodStatus">正在读取菜单…</p>
+      </section>
+      <section class="rest-card card" aria-labelledby="restTitle">
+        <div class="section-top"><h2 id="restTitle">下一次休息</h2><span class="quiet" id="restLabel">含法定调休</span></div>
+        <div class="rest-result"><strong id="restDays">—</strong><div><span id="restUnit">正在查日历</span><p id="restDate"></p></div></div>
+        <div id="weekStrip" class="week-strip" aria-label="未来七天工作与休息日"></div>
+        <p id="holidayHint" class="card-footnote"></p>
+      </section>
+      <section class="weather-card card" aria-label="北京天气">
+        <div class="section-top"><h2>北京天气</h2><button class="icon-button" id="weatherReload" aria-label="刷新北京天气"><svg class="icon small" aria-hidden="true"><use href="#i-refresh"/></svg></button></div>
+        <div class="weather-content"><div><strong id="weatherTemp">—</strong><p id="weatherDescription">正在读取天气…</p></div><svg class="weather-sun" aria-hidden="true"><use href="#i-sun"/></svg></div>
+        <p class="card-footnote">数据来自 Open-Meteo</p>
+      </section>
+      <section class="quote-card" aria-label="一言"><span class="quote-mark" aria-hidden="true">“</span><blockquote id="hitokoto">正在取一句话…</blockquote><p id="hitokotoFrom"></p></section>
+    </aside>
+    <div class="discovery">
+      <section class="projects card" id="projects" aria-labelledby="projectsTitle">
+        <div class="projects-heading"><div><div class="title-line"><span class="section-symbol" aria-hidden="true">⌘</span><h1 id="projectsTitle">GitHub 新鲜项目</h1></div><p id="digestInfo">近 7 天新创建的项目，按 Star 排序。</p></div><button class="icon-button" id="projectsReload" aria-label="重新读取项目快照" title="重新读取项目快照"><svg class="icon" aria-hidden="true"><use href="#i-refresh"/></svg></button></div>
+        <div class="project-tools"><div id="languageFilters" class="filter-list" aria-label="筛选项目语言"><button class="filter active" data-language="" aria-pressed="true">全部</button></div><label class="search"><svg class="icon small" aria-hidden="true"><use href="#i-search"/></svg><input id="repoSearch" type="search" placeholder="搜项目或关键词" aria-label="搜索 GitHub 项目"></label></div>
+        <div class="project-grid" id="repoGrid" aria-busy="true"></div>
+        <p class="state-message" id="projectMessage" role="status">正在读取项目快照…</p>
+        <div class="projects-footer"><span id="repoCount">GitHub Search API 数据快照</span><span>点击项目卡片打开仓库 <svg class="icon small" aria-hidden="true"><use href="#i-arrow"/></svg></span></div>
+      </section>
+      <section class="notes" id="notesSection" aria-label="公开笔记" hidden><div id="feed"></div></section>
+      <div class="feed-actions"><p id="feedStatus" role="status"></p><button class="text-button" id="more" hidden>加载更早的笔记</button></div>
     </div>
-    <div class="wb-divider"></div>
-    <div class="wb-weekend">
-      <span class="w-title">休息日倒计时</span>
-      <div class="line">
-        <span class="weekend-big" id="weekendDays">-</span>
-        <span class="weekend-unit" id="weekendUnit"></span>
-      </div>
-      <span class="weekend-sub" id="weekendSub"></span>
-    </div>
-  </section>
-
-  <section class="minis">
-    <div class="mini">
-      <span class="w-title">北京天气</span>
-      <span class="val" id="weather">加载中…</span>
-    </div>
-    <div class="mini">
-      <span class="w-title">一言</span>
-      <span class="hitokoto" id="hitokoto">加载中…</span>
-      <span class="from" id="hitokotoFrom"></span>
-    </div>
-    <div class="mini">
-      <span class="w-title" id="holidayTitle">距离国庆</span>
-      <span class="val" id="holidayVal">-</span>
-    </div>
-  </section>
-
-  <div id="trending"></div>
-  <div id="feed"></div>
-  <div class="empty" id="empty" style="display:none">还没有公开笔记。写一条 namespace=public 的记忆，就会出现在这里。</div>
-  <button id="more" style="display:none">加载更多</button>
-</main>
-
-<footer>
-  <span>© 2026 tscuite</span>
-  <span>Cloudflare Workers · D1 · Vectorize</span>
-  <a href="mailto:tscuite@agent.qq.com">tscuite@agent.qq.com</a>
-</footer>
-
-<dialog id="foodDialog">
-  <h3>编辑吃什么清单</h3>
-  <textarea id="foodListText" placeholder="空格或换行分隔，比如：麻辣烫 火锅 面条"></textarea>
-  <input id="secretInput" type="password" placeholder="API_SECRET（保存需要，与 Memory 控制台同一个）" autocomplete="off">
-  <div class="dlg-hint">密钥只保存在你本机浏览器，用于本地签名，不会发给任何服务器。</div>
-  <div class="dlg-actions">
-    <button class="w-btn" id="foodCancel">取消</button>
-    <button class="btn-primary" id="foodSave">保存</button>
-  </div>
+  </main>
+  <footer><span>tscuite 的小桌面</span><span>菜单存云端 · 公开数据按需读取</span></footer>
+</div>
+<dialog id="foodDialog" aria-labelledby="foodDialogTitle">
+  <form id="foodForm">
+    <div class="dialog-heading"><h2 id="foodDialogTitle">编辑吃什么清单</h2><button type="button" id="foodCancel" class="icon-button" aria-label="关闭菜单编辑">×</button></div>
+    <label for="foodListText">想吃的都写下来</label><textarea id="foodListText" rows="9" placeholder="麻辣烫\n火锅\n面条" required></textarea>
+    <p class="field-hint">空格或换行分隔，最多 200 项，每项不超过 30 字。保存后会更新公开菜单。</p>
+    <label for="secretInput">管理密钥</label><input id="secretInput" type="password" autocomplete="off" placeholder="与私人记忆使用同一密钥">
+    <p class="field-hint" id="keyHint">只在本地计算签名。新输入的密钥仅在当前标签页会话中保留。</p>
+    <p id="saveStatus" class="form-status" role="status"></p><div class="dialog-actions"><button type="button" id="forgetKey" class="text-button">清除已保存密钥</button><button class="primary" id="foodSave" type="submit">保存到云端</button></div>
+  </form>
 </dialog>
-
-<div id="toast"></div>
-
-<script>
-const ENDPOINT = localStorage.getItem("mem_console_endpoint") || "https://memory.tscuite.workers.dev";
-const LS_SECRET = "mem_console_secret";
-const $ = (id) => document.getElementById(id);
-let afterId = null;
-
-function toast(msg) {
-  const t = $("toast");
-  t.textContent = msg; t.style.display = "block";
-  setTimeout(() => (t.style.display = "none"), 3500);
-}
-function escapeHtml(s) {
-  return String(s ?? "").replace(/[&<>"']/g, (c) =>
-    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-}
-
-const LANG_COLORS = {
-  "Python": "#3572A5", "Rust": "#dea584", "TypeScript": "#3178c6", "Go": "#00ADD8",
-  "C++": "#f34b7d", "HTML": "#e34c26", "JavaScript": "#f1e05a", "Java": "#b07219",
-  "C": "#555555", "C#": "#178600", "Shell": "#89e051", "Vue": "#41b883",
-  "Kotlin": "#A97BFF", "Swift": "#F05138", "Ruby": "#701516", "Zig": "#ec915c",
-};
-const REPO_LINE = /^([A-Za-z0-9._-]+\/[A-Za-z0-9._-]+)\s*★\s*([\d,]+)\s*[・·]\s*(.+)$/;
-
-function repoRowHtml(m, rank) {
-  const dotColor = LANG_COLORS[m[3]] || "#8b8b93";
-  return `<a class="repo" href="https://github.com/${m[1]}" target="_blank" rel="noopener">
-    <span class="rank">${String(rank).padStart(2, "0")}</span>
-    <span class="rname">${escapeHtml(m[1])}</span>
-    <span class="stars">★ ${m[2]}</span>
-    <span class="lang"><i class="dot" style="background:${dotColor}"></i>${escapeHtml(m[3])}</span>
-  </a>`;
-}
-
-// ---- 吃什么：清单来自 worker 配置，可编辑 ----
-const FALLBACK_FOODS = ["麻辣烫", "火锅", "面条", "黄焖鸡", "沙拉", "不吃"];
-let FOODS = FALLBACK_FOODS;
-async function loadFoods() {
-  try {
-    const res = await fetch(`${ENDPOINT}/api/public/config/foods`);
-    if (res.ok) {
-      const data = await res.json();
-      if (Array.isArray(data.foods) && data.foods.length) FOODS = data.foods;
-    }
-  } catch { /* 用默认清单 */ }
-  showFood(daySeed());
-}
-function daySeed() {
-  const d = new Date();
-  const s = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
-  let h = 0;
-  for (const c of s) h = (h * 31 + c.charCodeAt(0)) >>> 0;
-  return h;
-}
-function showFood(i) { $("foodName").textContent = FOODS[i % FOODS.length]; }
-function scatter(word) {
-  const span = document.createElement("span");
-  span.className = "temp";
-  span.textContent = word;
-  span.style.top = Math.random() * (innerHeight - 48) + "px";
-  span.style.left = Math.random() * Math.max(60, innerWidth - 120) + "px";
-  span.style.fontSize = 14 + Math.random() * 22 + "px";
-  document.body.appendChild(span);
-  requestAnimationFrame(() => span.classList.add("show"));
-  setTimeout(() => {
-    span.classList.add("hide");
-    setTimeout(() => span.remove(), 600);
-  }, 600 + Math.random() * 400);
-}
-let rolling = false;
-$("reroll").onclick = () => {
-  if (rolling) return;
-  rolling = true;
-  const body = $("foodBody");
-  const title = $("foodTitle");
-  body.classList.add("rolling");
-  title.textContent = "吃什么？";
-  let tick = 0;
-  const timer = setInterval(() => {
-    const word = FOODS[Math.floor(Math.random() * FOODS.length)];
-    $("foodName").textContent = word;
-    scatter(word);
-    if (++tick > 16) {
-      clearInterval(timer);
-      rolling = false;
-      body.classList.remove("rolling");
-      body.classList.remove("settled");
-      void body.offsetWidth;
-      body.classList.add("settled");
-      title.textContent = "就吃这个！";
-    }
-  }, 50);
-};
-document.addEventListener("keydown", (e) => {
-  if (e.key === "Enter" && !$("foodDialog").open) $("reroll").click();
-});
-
-// 编辑清单：读 worker 配置，PUT 回写（HMAC 签名）
-async function sha256Hex(str) {
-  const d = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
-  return [...new Uint8Array(d)].map((b) => b.toString(16).padStart(2, "0")).join("");
-}
-async function sign(method, pathWithQuery, body) {
-  const secret = localStorage.getItem(LS_SECRET) || "";
-  const ts = String(Math.floor(Date.now() / 1000));
-  const nonce = crypto.randomUUID().replace(/-/g, "");
-  const canonical = `${method}\n${pathWithQuery}\n${ts}\n${nonce}\n${body ? await sha256Hex(body) : "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"}`;
-  const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(secret),
-    { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
-  const sig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(canonical));
-  return {
-    "X-Auth-Timestamp": ts,
-    "X-Auth-Nonce": nonce,
-    "X-Auth-Signature": [...new Uint8Array(sig)].map((b) => b.toString(16).padStart(2, "0")).join(""),
-  };
-}
-$("foodEdit").onclick = () => {
-  $("foodListText").value = FOODS.join(" ");
-  if (!localStorage.getItem(LS_SECRET)) $("secretInput").value = "";
-  $("foodDialog").showModal();
-};
-$("foodCancel").onclick = () => $("foodDialog").close();
-$("foodSave").onclick = async () => {
-  const raw = $("foodListText").value.split(/\s+/).map((s) => s.trim()).filter(Boolean);
-  if (!raw.length) return toast("清单不能为空");
-  const secret = $("secretInput").value.trim();
-  if (secret) localStorage.setItem(LS_SECRET, secret);
-  if (!localStorage.getItem(LS_SECRET)) return toast("先填 API_SECRET");
-  const body = JSON.stringify({ foods: raw });
-  try {
-    const res = await fetch(`${ENDPOINT}/api/config/foods`, {
-      method: "PUT", body,
-      headers: { "Content-Type": "application/json", ...(await sign("PUT", "/api/config/foods", body)) },
-    });
-    if (res.status === 401) throw new Error("密钥不对");
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    FOODS = raw;
-    $("foodDialog").close();
-    toast(`已保存 ${raw.length} 个选项`);
-  } catch (e) {
-    toast("保存失败：" + e.message);
-  }
-};
-
-// ---- 休息日倒计时 + 节假日（国务院调休表，worker 缓存，无数据时退化为周末计算） ----
-function dayIso(d) {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-}
-function dayParse(s) { return new Date(s + "T00:00:00+08:00"); }
-function dayDiff(a, b) { return Math.round((a - b) / 86400000); }
-
-async function initRestday() {
-  let years = {};
-  try {
-    const res = await fetch(`${ENDPOINT}/api/public/config/holidays`);
-    if (res.ok) years = (await res.json()).Years || {};
-  } catch { /* 无数据：只按周末算 */ }
-  const list = years[String(new Date().getFullYear())] || [];
-  const today = new Date(); today.setHours(0, 0, 0, 0);
-
-  // 某天是否休息日：补班优先，其次假期段，其次周末；返回 false 或 { name }
-  const restInfo = (d) => {
-    const di = dayIso(d);
-    for (const h of list) {
-      if ((h.CompDays || []).includes(di)) return false;
-      if (d >= dayParse(h.StartDate) && d <= dayParse(h.EndDate)) return { name: h.Name };
-    }
-    const dow = d.getDay();
-    return dow === 6 || dow === 0 ? { name: null } : false;
-  };
-
-  // 休息日倒计时条
-  const nowRest = restInfo(today);
-  if (nowRest) {
-    let left = 0;
-    for (const h of list) {
-      if (today >= dayParse(h.StartDate) && today <= dayParse(h.EndDate)) {
-        left = dayDiff(dayParse(h.EndDate), today);
-        break;
-      }
-    }
-    $("weekendDays").textContent = "🎉";
-    $("weekendUnit").textContent = nowRest.name ? `${nowRest.name}假期中` : "周末快乐";
-    $("weekendSub").textContent = nowRest.name && left > 0 ? `还有 ${left} 天假` : "好好休息";
-  } else {
-    let d = new Date(today);
-    for (let i = 1; i <= 45; i++) {
-      d = new Date(d.getTime() + 86400000);
-      const r = restInfo(d);
-      if (r) {
-        const days = dayDiff(d, today);
-        $("weekendDays").textContent = days;
-        $("weekendUnit").textContent = r.name && d.getDay() < 6 ? `天后「${r.name}」` : "天后是周末";
-        $("weekendSub").textContent = `${dayIso(d).replace(/-/g, ".")} ${d.getDay() === 6 ? "周六" : d.getDay() === 0 ? "周日" : r.name || "假期"}`;
-        break;
-      }
-    }
-  }
-
-  // 节假日小卡片
-  let inHoliday = null;
-  for (const h of list) {
-    if (today >= dayParse(h.StartDate) && today <= dayParse(h.EndDate) && !(h.CompDays || []).includes(dayIso(today))) {
-      inHoliday = h;
-      break;
-    }
-  }
-  if (inHoliday) {
-    $("holidayTitle").textContent = inHoliday.Name;
-    $("holidayVal").textContent = "假期中 🎉";
-  } else {
-    let next = null;
-    for (const h of list) {
-      const s = dayParse(h.StartDate);
-      if (s > today && (!next || s < dayParse(next.StartDate))) next = h;
-    }
-    if (next) {
-      const days = dayDiff(dayParse(next.StartDate), today);
-      $("holidayTitle").textContent = `距离${next.Name}`;
-      $("holidayVal").textContent = `${days} 天`;
-    } else {
-      const ny = new Date(today.getFullYear() + 1, 0, 1);
-      $("holidayTitle").textContent = "距离元旦";
-      $("holidayVal").textContent = `${dayDiff(ny, today)} 天`;
-    }
-  }
-}
-initRestday();
-
-// ---- 北京天气（Open-Meteo，免密钥） ----
-const WMO = { 0: "☀️ 晴", 1: "🌤 晴间多云", 2: "⛅ 多云", 3: "☁️ 阴", 45: "🌫 雾", 48: "🌫 雾凇",
-  51: "🌦 毛毛雨", 53: "🌦 毛毛雨", 55: "🌦 毛毛雨", 56: "🌧 冻雨", 57: "🌧 冻雨",
-  61: "🌧 小雨", 63: "🌧 中雨", 65: "🌧 大雨", 66: "🌧 冻雨", 67: "🌧 冻雨",
-  71: "🌨 小雪", 73: "🌨 中雪", 75: "🌨 大雪", 77: "🌨 雪粒", 80: "🌧 阵雨", 81: "🌧 阵雨",
-  82: "🌧 强阵雨", 85: "🌨 阵雪", 86: "🌨 阵雪", 95: "⛈ 雷雨", 96: "⛈ 雷雨冰雹", 99: "⛈ 雷雨冰雹" };
-(async function weather() {
-  try {
-    const res = await fetch("https://api.open-meteo.com/v1/forecast?latitude=39.9042&longitude=116.4074&current=temperature_2m,weather_code&timezone=Asia%2FShanghai");
-    if (!res.ok) throw new Error();
-    const d = await res.json();
-    const code = d.current?.weather_code;
-    const t = Math.round(d.current?.temperature_2m);
-    $("weather").textContent = `${WMO[code] || "🌡"} ${t}°C`;
-  } catch { $("weather").textContent = "—"; }
-})();
-
-// ---- 一言（hitokoto，免密钥） ----
-(async function hitokoto() {
-  try {
-    const res = await fetch("https://v1.hitokoto.cn/?c=d&c=i&c=k");
-    if (!res.ok) throw new Error();
-    const d = await res.json();
-    $("hitokoto").textContent = d.hitokoto;
-    $("hitokotoFrom").textContent = d.from ? `—— ${d.from}` : "";
-  } catch {
-    $("hitokoto").textContent = "今天也要加油。";
-    $("hitokotoFrom").textContent = "";
-  }
-})();
-
-// ---- 节假日倒计时（并入 initRestday，用调休表数据） ----
-
-// ---- 笔记流：trending 标签的进独立面板，其余进笔记流 ----
-function renderContent(content) {
-  const blocks = String(content || "").split(/\n{2,}/);
-  const out = [];
-  let rank = 0;
-  for (const block of blocks) {
-    const lines = block.split("\n").map((l) => l.trim()).filter(Boolean);
-    const m = lines.length >= 1 ? lines[0].match(REPO_LINE) : null;
-    if (m) {
-      rank += 1;
-      const desc = lines.slice(1).join(" ");
-      const dotColor = LANG_COLORS[m[3]] || "#8b8b93";
-      out.push(`<a class="repo" href="https://github.com/${m[1]}" target="_blank" rel="noopener">
-        <span class="rank">${String(rank).padStart(2, "0")}</span>
-        <span class="rname">${escapeHtml(m[1])} <span class="arrow">↗</span></span>
-        <span class="stars">★ ${m[2]}</span>
-        <span class="lang"><i class="dot" style="background:${dotColor}"></i>${escapeHtml(m[3])}</span>
-        ${desc ? `<span class="rdesc">${escapeHtml(desc)}</span>` : ""}
-      </a>`);
-    } else {
-      out.push(`<div class="plain">${escapeHtml(block)}</div>`);
-    }
-  }
-  return out.join("");
-}
-
-function noteHtml(n) {
-  const date = (n.created_at || "").slice(0, 10).replace(/-/g, ".");
-  const tags = (n.tags || []).map((t) => `<span class="tag">${escapeHtml(t)}</span>`).join("");
-  return `<article class="note">
-    <div class="note-head">
-      <span class="date">${date}</span>
-      <h2>${escapeHtml(n.subject || "（无标题）")}</h2>
-    </div>
-    ${renderContent(n.content)}
-    ${tags ? `<div class="tags">${tags}</div>` : ""}
-  </article>`;
-}
-
-function trendingHtml(item) {
-  const date = (item.created_at || "").slice(0, 10).replace(/-/g, ".");
-  const blocks = String(item.content || "").split(/\n{2,}/);
-  const rows = [];
-  let rank = 0;
-  for (const block of blocks) {
-    const lines = block.split("\n").map((l) => l.trim()).filter(Boolean);
-    const m = lines[0]?.match(REPO_LINE);
-    if (m) rows.push(repoRowHtml(m, ++rank));
-  }
-  if (!rows.length) return "";
-  return `<section class="panel" id="trendingPanel">
-    <div class="panel-head">
-      <h2>GitHub 每日热门</h2>
-      <span class="date">${date}</span>
-    </div>
-    <div class="repo-grid">${rows.join("")}</div>
-  </section>`;
-}
-
-async function load(append) {
-  try {
-    const p = new URLSearchParams({ limit: "10" });
-    if (afterId) p.set("after_id", afterId);
-    const res = await fetch(`${ENDPOINT}/api/public/memories?${p}`);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    const items = data.items || [];
-
-    // trending 拆出来（只在首屏渲染一次）
-    if (!append) {
-      const trending = items.filter((i) => (i.tags || []).includes("trending"));
-      const notes = items.filter((i) => !(i.tags || []).includes("trending"));
-      $("trending").innerHTML = trending.map(trendingHtml).join("");
-      $("feed").innerHTML = notes.map(noteHtml).join("");
-    } else {
-      $("feed").insertAdjacentHTML("beforeend", items.filter((i) => !(i.tags || []).includes("trending")).map(noteHtml).join(""));
-    }
-
-    afterId = data.next_after_id;
-    const total = $("feed").querySelectorAll(".note").length;
-    $("more").style.display = data.next_after_id ? "block" : "none";
-    $("empty").style.display = total ? "none" : "block";
-    if (!total) $("empty").textContent = "还没有公开笔记。写一条 namespace=public 的记忆，就会出现在这里。";
-  } catch (e) {
-    toast("加载失败：" + e.message);
-    $("empty").style.display = "block";
-    $("empty").textContent = "笔记加载失败，稍后再试试。";
-  }
-}
-
-$("more").onclick = () => load(true);
-load(false);
-loadFoods();
-</script>
+<div id="toast" class="toast" role="status" hidden></div>
+<noscript><p class="state-message">请启用 JavaScript 以加载笔记和小组件。</p></noscript>
 </body>
 </html>

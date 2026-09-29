@@ -1,0 +1,12 @@
+name = "site-api"
+main = "worker.mjs"
+compatibility_date = "2026-04-08"
+workers_dev = true
+preview_urls = false
+
+[[services]]
+binding = "MEMORY"
+service = "memory"
+
+[observability]
+enabled = false
