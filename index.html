@@ -27,13 +27,18 @@
   <nav aria-label="站点导航">
     <a class="nav-active" href="/" aria-current="page">日常</a>
     <a href="https://github.com/tscuite" target="_blank" rel="noopener noreferrer">GitHub <svg class="icon small" aria-hidden="true"><use href="#i-arrow"/></svg></a>
-    <a href="/memory/">私人记忆</a>
+    <a href="/memory/">记忆</a>
   </nav>
   <button class="user-chip" id="userNav">登录</button>
   <button class="icon-button" id="themeToggle" aria-label="切换深色模式" title="切换深色模式"><svg class="icon" aria-hidden="true"><use href="#i-sun"/></svg></button>
 </header>
 <div class="page">
-  <div class="dateline"><time id="todayDate"></time></div>
+  <section class="quote-strip" aria-label="每日一言">
+    <time id="todayDate"></time>
+    <span class="strip-sep" aria-hidden="true"></span>
+    <blockquote id="hitokoto">正在取一句话…</blockquote>
+    <span class="quote-from" id="hitokotoFrom"></span>
+  </section>
   <main class="desktop">
     <aside class="life" aria-label="生活工具">
       <section class="meal" aria-labelledby="foodTitle">
@@ -53,7 +58,6 @@
         <div class="weather-content"><div><strong id="weatherTemp">—</strong><p id="weatherDescription">正在读取天气…</p></div><svg class="weather-sun" aria-hidden="true"><use href="#i-sun"/></svg></div>
         <p class="card-footnote">数据来自 Open-Meteo</p>
       </section>
-      <section class="quote-card" aria-label="一言"><span class="quote-mark" aria-hidden="true">“</span><blockquote id="hitokoto">正在取一句话…</blockquote><p id="hitokotoFrom"></p></section>
     </aside>
     <div class="discovery">
       <section class="projects card" id="projects" aria-labelledby="projectsTitle">
@@ -78,13 +82,13 @@
   </form>
 </dialog>
 <dialog id="registerDialog" aria-labelledby="registerDialogTitle">
-  <form id="registerForm">
+  <form id="registerForm" data-mode="login">
     <div class="dialog-heading"><h2 id="registerDialogTitle">登录小桌面</h2><button type="button" id="registerCancel" class="icon-button" aria-label="关闭登录窗口">×</button></div>
     <label for="registerEmail">邮箱</label><input id="registerEmail" type="email" autocomplete="email" required placeholder="you@example.com">
-    <label for="registerCode">邀请码</label><input id="registerCode" autocomplete="off" required placeholder="8 位字母数字">
-    <label for="registerName">昵称（可选）</label><input id="registerName" autocomplete="off" placeholder="怎么称呼你">
-    <p class="field-hint">没有邀请码？找 tscuite 要一个。同一邮箱再次登录会用掉一个新的邀请码。</p>
-    <p id="registerStatus" class="form-status" role="status"></p><div class="dialog-actions"><button class="primary" id="registerSubmit" type="submit">登录 / 注册</button></div>
+    <label for="registerPassword">密码</label><input id="registerPassword" type="password" autocomplete="current-password" required minlength="6" placeholder="至少 6 位">
+    <label for="registerName">昵称（注册时可选）</label><input id="registerName" autocomplete="off" placeholder="怎么称呼你">
+    <p class="field-hint">没有账号？填好邮箱和密码后点「注册新账号」。登录后看到的是你自己的菜单。</p>
+    <p id="registerStatus" class="form-status" role="status"></p><div class="dialog-actions"><button type="button" id="registerNew" class="text-button">注册新账号</button><button class="primary" id="registerSubmit" type="submit">登录</button></div>
   </form>
 </dialog>
 <div id="toast" class="toast" role="status" hidden></div>
