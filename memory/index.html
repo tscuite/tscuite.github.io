@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Memory Console</title>
+<title>Memory</title>
 <style>
   :root {
     --bg: #0b0b0f;
@@ -25,11 +25,15 @@
     min-height: 100vh;
   }
   .wrap { max-width: 760px; margin: 0 auto; padding: 40px 20px 80px; }
-  header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 28px; }
+  header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 28px; gap: 12px; flex-wrap: wrap; }
   .wordmark { font: 700 22px/1 var(--mono); letter-spacing: 0.12em; }
   .wordmark span { color: var(--accent); }
+  .header-actions { display: flex; align-items: center; gap: 14px; }
+  .back-link { font: 12px var(--mono); color: var(--muted); text-decoration: none; }
+  .back-link:hover { color: var(--fg); }
   .secret-state { font: 12px var(--mono); color: var(--muted); cursor: pointer; border: none; background: none; }
   .secret-state:hover { color: var(--fg); }
+  .mode-banner { font: 12px var(--mono); color: var(--muted); border: 1px dashed var(--border); border-radius: 8px; padding: 8px 14px; margin-bottom: 18px; }
   .search-row { display: flex; gap: 10px; }
   #q {
     flex: 1; background: var(--panel); border: 1px solid var(--border);
@@ -47,12 +51,14 @@
   .memories { display: grid; gap: 10px; }
   .card {
     background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
-    padding: 14px 16px; cursor: pointer; transition: border-color .12s;
+    padding: 14px 16px; transition: border-color .12s;
   }
-  .card:hover { border-color: var(--accent); }
+  .card.clickable { cursor: pointer; }
+  .card.clickable:hover { border-color: var(--accent); }
   .card h3 { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
-  .card .snippet { color: var(--muted); font-size: 14px;
-    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .card .snippet { color: var(--muted); font-size: 14px; white-space: pre-wrap; word-break: break-word;
+    display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .card .full { color: var(--fg); font-size: 14px; white-space: pre-wrap; word-break: break-word; }
   .card .meta { display: flex; align-items: center; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
   .badge { font: 11px var(--mono); padding: 2px 8px; border-radius: 4px; background: var(--panel2); border: 1px solid var(--border); color: var(--muted); }
   .badge.memory { color: var(--mem); border-color: #2a3a55; }
@@ -88,12 +94,13 @@
     background: var(--fail); color: #1a0505; padding: 8px 16px; border-radius: 8px;
     font-size: 14px; display: none; z-index: 20; max-width: 90vw;
   }
-  /* 初始化屏 */
+  /* 登录屏 */
   #setup { text-align: center; padding-top: 12vh; }
   #setup h1 { font: 700 26px var(--mono); letter-spacing: 0.12em; margin-bottom: 8px; }
   #setup p { color: var(--muted); font-size: 14px; margin-bottom: 28px; }
+  #setup label { display: block; font: 12px var(--mono); color: var(--muted); margin: 10px auto 4px; width: min(420px, 90%); text-align: left; }
   #setup input {
-    width: min(420px, 90%); display: block; margin: 0 auto 12px;
+    width: min(420px, 90%); display: block; margin: 0 auto;
     background: var(--panel); border: 1px solid var(--border); color: var(--fg);
     padding: 12px 16px; border-radius: 8px; font: 14px var(--mono); outline: none;
   }
@@ -101,6 +108,7 @@
   #setup button {
     background: var(--accent); color: var(--bg); border: none; font-weight: 600;
     padding: 11px 40px; border-radius: 8px; font-size: 15px; cursor: pointer;
+    margin-top: 20px;
   }
   .hint { color: #55555e; font-size: 12.5px; margin-top: 16px; }
 </style>
@@ -109,26 +117,33 @@
 <div class="wrap">
   <header>
     <div class="wordmark">MEMORY<span>_</span></div>
-    <a class="secret-state" href="/">返回小桌面</a>
-    <button class="secret-state" id="secretState" title="退出并清除密钥"></button>
+    <div class="header-actions">
+      <a class="back-link" href="/">返回小桌面</a>
+      <button class="secret-state" id="secretState" title="退出登录"></button>
+    </div>
   </header>
 
   <div id="setup">
     <h1>MEMORY_</h1>
-    <p>通过站点代理访问，私有数据仍需签名鉴权</p>
-    <label for="secret">管理密钥</label>
-    <input id="secret" type="password" placeholder="API_SECRET" autocomplete="off">
-    <br><br>
-    <button id="connect">连接</button>
-    <p class="hint">密钥 = 超管：可看全部记忆。普通用户请在首页用邮箱密码登录，只能看到自己的内容。</p>
+    <p>用你的账号登录。管理员可见全部记忆，普通用户仅公开内容。</p>
+    <label for="email">邮箱</label>
+    <input id="email" type="email" placeholder="you@example.com" autocomplete="email">
+    <label for="password">密码</label>
+    <input id="password" type="password" placeholder="密码" autocomplete="current-password">
+    <br>
+    <button id="connect">登录</button>
+    <p class="hint">没有账号？找 tscuite 开通，页面没有注册入口。</p>
   </div>
 
   <div id="app" style="display:none">
-    <div class="search-row">
-      <input id="q" placeholder="搜索记忆…（≥3 字走语义检索，/ 聚焦）" autocomplete="off">
+    <div class="mode-banner" id="modeBanner"></div>
+    <div id="adminUi" style="display:none">
+      <div class="search-row">
+        <input id="q" placeholder="搜索记忆…（≥3 字走语义检索，/ 聚焦）" autocomplete="off">
+      </div>
+      <div class="filters" id="targetFilter"></div>
+      <div class="filters" id="horizonFilter"></div>
     </div>
-    <div class="filters" id="targetFilter"></div>
-    <div class="filters" id="horizonFilter"></div>
     <div class="memories" id="list"></div>
     <button id="more" style="display:none">加载更多</button>
     <div class="empty" id="empty" style="display:none">没有匹配的记忆</div>
@@ -139,7 +154,7 @@
 <div id="toast"></div>
 
 <script type="module">
-import { api as requestAPI, savedSecret, rememberSecret, forgetSecret } from "/assets/api.mjs";
+import { api, storeSessionToken, clearSessionToken } from "/assets/api.mjs";
 const $ = (id) => document.getElementById(id);
 
 const TARGETS = [
@@ -150,7 +165,7 @@ const HORIZONS = [
   ["monthly", "monthly"], ["permanent", "permanent"],
 ];
 
-let secret = savedSecret();
+let me = null; // { email, name, isAdmin }
 let state = { target: "", horizons: [], q: "", afterId: null, loading: false };
 let activeRequest;
 
@@ -160,11 +175,14 @@ function toast(msg) {
   setTimeout(() => (t.style.display = "none"), 3500);
 }
 
-function api(path, options = {}) { return requestAPI(path, { ...options, secret }); }
+function escapeHtml(s) {
+  return String(s ?? "").replace(/[&<>"']/g, (c) =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
 
 function relTime(iso) {
   if (!iso) return "";
-  const s = Math.max(0, (Date.now() - new Date(iso).getTime()) / 1000);
+  const s = Math.max(0, (Date.now() - new Date(iso.replace(" ", "T") + "Z").getTime()) / 1000);
   if (s < 60) return "刚刚";
   if (s < 3600) return `${Math.floor(s / 60)} 分钟前`;
   if (s < 86400) return `${Math.floor(s / 3600)} 小时前`;
@@ -172,33 +190,22 @@ function relTime(iso) {
   return iso.slice(0, 10);
 }
 
-function buildQuery() {
-  const p = new URLSearchParams();
-  p.set("limit", "20");
-  p.set("namespace", "default");
-  if (state.target) p.set("target", state.target);
-  state.horizons.forEach((h) => p.append("horizon", h));
-  if (state.afterId) p.set("after_id", state.afterId);
-  if (state.q && state.q.trim().length < 3) p.set("q", state.q.trim());
-  return "?" + p.toString();
-}
-
 function cardHtml(m) {
   const tags = (m.tags || []).slice(0, 3).map((t) => `<span class="badge">#${escapeHtml(t)}</span>`).join("");
   const cat = m.category ? `<span class="badge">${escapeHtml(m.category)}</span>` : "";
-  return `<div class="card" data-id="${m.id}">
+  return `<div class="card${me.isAdmin ? " clickable" : ""}" data-id="${m.id}">
     <h3>${escapeHtml(m.subject || "（无标题）")}</h3>
-    <div class="snippet">${escapeHtml(m.content || "")}</div>
+    <div class="${me.isAdmin ? "snippet" : "full"}">${escapeHtml(m.content || "")}</div>
     <div class="meta">
       <span class="badge ${escapeHtml(m.target || "")}">${escapeHtml(m.target || "memory")}</span>
       <span class="badge">${escapeHtml(m.horizon || "daily")}</span>
       ${cat}${tags}
-      <span class="time" title="${escapeHtml(m.created_at || "")}">${escapeHtml(relTime(m.created_at))}</span>
+      <span class="time" title="${escapeHtml(m.created_at || "")}">${relTime(m.created_at)}</span>
     </div>
   </div>`;
 }
 
-async function load(append) {
+async function loadAdmin(append) {
   if (append && state.loading) return;
   activeRequest?.abort();
   const controller = new AbortController();
@@ -213,7 +220,11 @@ async function load(append) {
       });
       data = await api("/api/memories/query", { method: "POST", body, signal: controller.signal });
     } else {
-      data = await api("/api/memories" + buildQuery(), { signal: controller.signal });
+      const p = new URLSearchParams({ limit: "20", namespace: "default" });
+      if (state.target) p.set("target", state.target);
+      state.horizons.forEach((h) => p.append("horizon", h));
+      if (append && state.afterId) p.set("after_id", state.afterId);
+      data = await api("/api/memories?" + p.toString(), { signal: controller.signal });
     }
     if (controller.signal.aborted) return;
     const items = data.items || [];
@@ -228,6 +239,36 @@ async function load(append) {
   } finally {
     if (activeRequest === controller) state.loading = false;
   }
+}
+
+async function loadPublic(append) {
+  if (append && state.loading) return;
+  activeRequest?.abort();
+  const controller = new AbortController();
+  activeRequest = controller;
+  state.loading = true;
+  try {
+    const p = new URLSearchParams({ limit: "20" });
+    if (append && state.afterId) p.set("after_id", state.afterId);
+    const data = await api("/api/public/memories?" + p.toString(), { signal: controller.signal });
+    if (controller.signal.aborted) return;
+    const items = data.items || [];
+    if (!append) $("list").innerHTML = "";
+    $("list").insertAdjacentHTML("beforeend", items.map(cardHtml).join(""));
+    state.afterId = data.next_after_id;
+    $("more").style.display = state.afterId ? "block" : "none";
+    $("empty").style.display = $("list").children.length ? "none" : "block";
+    if (!$("list").children.length) $("empty").textContent = "还没有公开内容";
+  } catch (e) {
+    if (controller.signal.aborted) return;
+    toast(e.message);
+  } finally {
+    if (activeRequest === controller) state.loading = false;
+  }
+}
+
+function load(append) {
+  return me.isAdmin ? loadAdmin(append) : loadPublic(append);
 }
 
 async function openDetail(id) {
@@ -256,35 +297,6 @@ async function openDetail(id) {
 }
 function closeDrawer() { $("drawer").classList.remove("open"); }
 
-function escapeHtml(s) {
-  return String(s ?? "").replace(/[&<>"']/g, (c) =>
-    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-}
-
-// 初始化屏
-function showApp() {
-  $("setup").style.display = "none";
-  $("app").style.display = "block";
-  $("secretState").textContent = "已通过代理连接 · 退出";
-  load(false);
-}
-$("connect").onclick = () => {
-  secret = $("secret").value.trim();
-  if (!secret) return toast("填一下密钥");
-  rememberSecret(secret);
-  $("secret").value = "";
-  showApp();
-};
-$("secretState").onclick = () => {
-  activeRequest?.abort();
-  forgetSecret();
-  secret = ""; $("list").replaceChildren(); closeDrawer();
-  state.afterId = null;
-  $("app").style.display = "none"; $("setup").style.display = "block";
-};
-if (secret) showApp();
-
-// 筛选 chips
 function renderChips(container, options, active, key) {
   container.innerHTML = options.map(([v, label]) =>
     `<button class="chip ${((Array.isArray(active) ? active.includes(v) : active === v) || (v === "" && active.length === 0)) ? "on" : ""}" data-v="${v}">${label}</button>`).join("");
@@ -298,8 +310,48 @@ function renderChips(container, options, active, key) {
     state.afterId = null; load(false);
   };
 }
-renderChips($("targetFilter"), TARGETS, state.target, "target");
-renderChips($("horizonFilter"), HORIZONS, state.horizons, "horizons");
+
+function showApp() {
+  $("setup").style.display = "none";
+  $("app").style.display = "block";
+  $("secretState").textContent = `${me.email} · 退出`;
+  $("modeBanner").textContent = me.isAdmin
+    ? "管理员模式：可见全部记忆，搜索与筛选已开启"
+    : "普通用户模式：仅公开内容，只读";
+  $("adminUi").style.display = me.isAdmin ? "block" : "none";
+  if (me.isAdmin) {
+    renderChips($("targetFilter"), TARGETS, state.target, "target");
+    renderChips($("horizonFilter"), HORIZONS, state.horizons, "horizons");
+  }
+  load(false);
+}
+
+$("connect").onclick = async () => {
+  const email = $("email").value.trim();
+  const password = $("password").value;
+  if (!email || !password) return toast("填一下邮箱和密码");
+  $("connect").disabled = true;
+  try {
+    const { user, token } = await api("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ email, password }),
+    });
+    if (!user?.email) throw new Error("登录响应异常");
+    if (token) storeSessionToken(token);
+    me = user;
+    $("password").value = "";
+    showApp();
+  } catch (e) {
+    toast(e.message);
+  } finally { $("connect").disabled = false; }
+};
+$("secretState").onclick = () => {
+  activeRequest?.abort();
+  clearSessionToken();
+  me = null; $("list").replaceChildren(); closeDrawer();
+  state.afterId = null;
+  $("app").style.display = "none"; $("setup").style.display = "block";
+};
 
 $("more").onclick = () => load(true);
 let debounce;
@@ -312,10 +364,18 @@ document.addEventListener("keydown", (e) => {
   if (e.key === "/" && !["INPUT", "TEXTAREA"].includes(document.activeElement.tagName) && $("app").style.display !== "none") { e.preventDefault(); $("q").focus(); }
 });
 document.addEventListener("click", (e) => {
-  const card = e.target.closest(".card");
+  const card = e.target.closest(".card.clickable");
   if (card) openDetail(card.dataset.id);
 });
 $("drawer").addEventListener("click", (e) => { if (e.target === $("drawer")) closeDrawer(); });
+
+// 会话已在（回到页面时自动登录）
+(async () => {
+  try {
+    const { user } = await api("/api/auth/me");
+    if (user?.email) { me = user; showApp(); }
+  } catch { /* 未登录 */ }
+})();
 </script>
 </body>
 </html>

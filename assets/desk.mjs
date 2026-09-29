@@ -155,28 +155,20 @@ $("userNav").onclick = async () => {
   }
 };
 $("registerCancel").onclick = () => $("registerDialog").close();
-$("registerNew").onclick = () => {
-  $("registerForm").dataset.mode = "register";
-  $("registerStatus").textContent = "";
-  $("registerForm").requestSubmit();
-};
 $("registerForm").onsubmit = async event => {
   event.preventDefault();
   if ($("registerSubmit").disabled) return;
   const status = $("registerStatus");
   status.classList.remove("error");
-  const mode = $("registerForm").dataset.mode || "login";
   $("registerSubmit").disabled = true;
-  status.textContent = mode === "register" ? "正在注册…" : "正在登录…";
+  status.textContent = "正在登录…";
   try {
-    const payload = {
-      email: $("registerEmail").value.trim(),
-      password: $("registerPassword").value,
-    };
-    if (mode === "register") payload.name = $("registerName").value.trim();
-    const { user, token } = await api(`/api/auth/${mode}`, {
+    const { user, token } = await api("/api/auth/login", {
       method: "POST",
-      body: JSON.stringify(payload),
+      body: JSON.stringify({
+        email: $("registerEmail").value.trim(),
+        password: $("registerPassword").value,
+      }),
     });
     if (!user?.email) throw new Error("登录响应异常");
     if (token) storeSessionToken(token);
@@ -184,7 +176,6 @@ $("registerForm").onsubmit = async event => {
     renderUser();
     $("registerDialog").close();
     $("registerForm").reset();
-    $("registerForm").dataset.mode = "login";
     $("registerStatus").textContent = "";
     loadFoods();
     toast(`欢迎，${me.name || me.email}`);
