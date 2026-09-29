@@ -1,11 +1,98 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-CN">
 <head>
 <meta charset="utf-8">
-<title>菜鸟教程(runoob.com)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>tscuite</title>
+<style>
+  :root {
+    --bg: #f7f7f5;
+    --fg: #1a1a1a;
+    --muted: #6b6b6b;
+    --card: #ffffff;
+    --accent: #2563eb;
+    --border: #e5e5e0;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #101014;
+      --fg: #e8e8ea;
+      --muted: #9a9aa2;
+      --card: #1a1a20;
+      --accent: #6ea8ff;
+      --border: #2a2a32;
+    }
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+                 "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    background: var(--bg);
+    color: var(--fg);
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+  }
+  main {
+    width: 100%;
+    max-width: 480px;
+  }
+  .avatar {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #fff;
+    display: grid;
+    place-items: center;
+    font-size: 26px;
+    font-weight: 700;
+    margin-bottom: 20px;
+  }
+  h1 { font-size: 28px; letter-spacing: 0.02em; }
+  .tagline { color: var(--muted); margin-top: 8px; font-size: 15px; }
+  .links {
+    margin-top: 32px;
+    display: grid;
+    gap: 10px;
+  }
+  .links a {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    text-decoration: none;
+    color: var(--fg);
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-size: 15px;
+    transition: border-color .15s, transform .15s;
+  }
+  .links a:hover { border-color: var(--accent); transform: translateY(-1px); }
+  .links a::after { content: "→"; color: var(--muted); }
+  footer {
+    margin-top: 32px;
+    color: var(--muted);
+    font-size: 13px;
+  }
+  footer a { color: var(--accent); text-decoration: none; }
+</style>
 </head>
 <body>
-    <h1>欢迎你来到tscuite的世界</h1>
-    <p>这里有你想要的一切</p>
+<main>
+  <div class="avatar">T</div>
+  <h1>tscuite</h1>
+  <p class="tagline">DevOps / SRE · 私有化交付</p>
+  <nav class="links">
+    <a href="https://github.com/tscuite">GitHub</a>
+    <a href="/gvatest/">gvatest</a>
+    <a href="/huoxian/">huoxian</a>
+  </nav>
+  <footer>
+    <a href="mailto:tscuite@agent.qq.com">tscuite@agent.qq.com</a>
+  </footer>
+</main>
 </body>
 </html>
