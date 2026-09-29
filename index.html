@@ -282,7 +282,7 @@
     </div>
     <div class="wb-divider"></div>
     <div class="wb-weekend">
-      <span class="w-title">周末倒计时</span>
+      <span class="w-title">休息日倒计时</span>
       <div class="line">
         <span class="weekend-big" id="weekendDays">-</span>
         <span class="weekend-unit" id="weekendUnit"></span>
@@ -476,23 +476,90 @@ $("foodSave").onclick = async () => {
   }
 };
 
-// ---- 周末倒计时 ----
-(function weekend() {
-  const now = new Date();
-  const dow = now.getDay();
-  const days = (6 - dow + 7) % 7;
-  const $days = $("weekendDays"), $unit = $("weekendUnit"), $sub = $("weekendSub");
-  if (dow === 6 || dow === 0) {
-    $days.textContent = "🎉";
-    $unit.textContent = "就是今天！";
-    $sub.textContent = "周末愉快";
-    return;
+// ---- 休息日倒计时 + 节假日（国务院调休表，worker 缓存，无数据时退化为周末计算） ----
+function dayIso(d) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+function dayParse(s) { return new Date(s + "T00:00:00+08:00"); }
+function dayDiff(a, b) { return Math.round((a - b) / 86400000); }
+
+async function initRestday() {
+  let years = {};
+  try {
+    const res = await fetch(`${ENDPOINT}/api/public/config/holidays`);
+    if (res.ok) years = (await res.json()).Years || {};
+  } catch { /* 无数据：只按周末算 */ }
+  const list = years[String(new Date().getFullYear())] || [];
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+
+  // 某天是否休息日：补班优先，其次假期段，其次周末；返回 false 或 { name }
+  const restInfo = (d) => {
+    const di = dayIso(d);
+    for (const h of list) {
+      if ((h.CompDays || []).includes(di)) return false;
+      if (d >= dayParse(h.StartDate) && d <= dayParse(h.EndDate)) return { name: h.Name };
+    }
+    const dow = d.getDay();
+    return dow === 6 || dow === 0 ? { name: null } : false;
+  };
+
+  // 休息日倒计时条
+  const nowRest = restInfo(today);
+  if (nowRest) {
+    let left = 0;
+    for (const h of list) {
+      if (today >= dayParse(h.StartDate) && today <= dayParse(h.EndDate)) {
+        left = dayDiff(dayParse(h.EndDate), today);
+        break;
+      }
+    }
+    $("weekendDays").textContent = "🎉";
+    $("weekendUnit").textContent = nowRest.name ? `${nowRest.name}假期中` : "周末快乐";
+    $("weekendSub").textContent = nowRest.name && left > 0 ? `还有 ${left} 天假` : "好好休息";
+  } else {
+    let d = new Date(today);
+    for (let i = 1; i <= 45; i++) {
+      d = new Date(d.getTime() + 86400000);
+      const r = restInfo(d);
+      if (r) {
+        const days = dayDiff(d, today);
+        $("weekendDays").textContent = days;
+        $("weekendUnit").textContent = r.name && d.getDay() < 6 ? `天后「${r.name}」` : "天后是周末";
+        $("weekendSub").textContent = `${dayIso(d).replace(/-/g, ".")} ${d.getDay() === 6 ? "周六" : d.getDay() === 0 ? "周日" : r.name || "假期"}`;
+        break;
+      }
+    }
   }
-  const sat = new Date(now.getTime() + days * 86400000);
-  $days.textContent = days;
-  $unit.textContent = "天后是周末";
-  $sub.textContent = `${sat.getFullYear()}.${String(sat.getMonth() + 1).padStart(2, "0")}.${String(sat.getDate()).padStart(2, "0")} 周六`;
-})();
+
+  // 节假日小卡片
+  let inHoliday = null;
+  for (const h of list) {
+    if (today >= dayParse(h.StartDate) && today <= dayParse(h.EndDate) && !(h.CompDays || []).includes(dayIso(today))) {
+      inHoliday = h;
+      break;
+    }
+  }
+  if (inHoliday) {
+    $("holidayTitle").textContent = inHoliday.Name;
+    $("holidayVal").textContent = "假期中 🎉";
+  } else {
+    let next = null;
+    for (const h of list) {
+      const s = dayParse(h.StartDate);
+      if (s > today && (!next || s < dayParse(next.StartDate))) next = h;
+    }
+    if (next) {
+      const days = dayDiff(dayParse(next.StartDate), today);
+      $("holidayTitle").textContent = `距离${next.Name}`;
+      $("holidayVal").textContent = `${days} 天`;
+    } else {
+      const ny = new Date(today.getFullYear() + 1, 0, 1);
+      $("holidayTitle").textContent = "距离元旦";
+      $("holidayVal").textContent = `${dayDiff(ny, today)} 天`;
+    }
+  }
+}
+initRestday();
 
 // ---- 北京天气（Open-Meteo，免密钥） ----
 const WMO = { 0: "☀️ 晴", 1: "🌤 晴间多云", 2: "⛅ 多云", 3: "☁️ 阴", 45: "🌫 雾", 48: "🌫 雾凇",
@@ -525,23 +592,7 @@ const WMO = { 0: "☀️ 晴", 1: "🌤 晴间多云", 2: "⛅ 多云", 3: "☁�
   }
 })();
 
-// ---- 节假日倒计时 ----
-(function holiday() {
-  const list = [
-    { name: "国庆", date: "2026-10-01" },
-    { name: "元旦", date: "2027-01-01" },
-  ];
-  const today = new Date(); today.setHours(0, 0, 0, 0);
-  let next = null, days = Infinity;
-  for (const h of list) {
-    const d = new Date(h.date + "T00:00:00+08:00");
-    const diff = Math.ceil((d - today) / 86400000);
-    if (diff >= 0 && diff < days) { days = diff; next = h; }
-  }
-  if (!next) return;
-  $("holidayTitle").textContent = `距离${next.name}`;
-  $("holidayVal").textContent = days === 0 ? `${next.name}就是今天 🎉` : `${days} 天`;
-})();
+// ---- 节假日倒计时（并入 initRestday，用调休表数据） ----
 
 // ---- 笔记流：trending 标签的进独立面板，其余进笔记流 ----
 function renderContent(content) {
