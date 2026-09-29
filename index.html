@@ -126,9 +126,8 @@
     </nav>
   </header>
 
-  <div id="feed">
-    <div class="empty" id="empty">还没有公开笔记。写一条 namespace=public 的记忆，就会出现在这里。</div>
-  </div>
+  <div id="feed"></div>
+  <div class="empty" id="empty" style="display:none">还没有公开笔记。写一条 namespace=public 的记忆，就会出现在这里。</div>
   <button id="more" style="display:none">加载更多</button>
 
   <footer>
@@ -204,6 +203,7 @@ async function load(append) {
     const total = $("feed").querySelectorAll(".note").length;
     $("more").style.display = data.next_after_id ? "block" : "none";
     $("empty").style.display = total ? "none" : "block";
+    if (!total) $("empty").textContent = "还没有公开笔记。写一条 namespace=public 的记忆，就会出现在这里。";
   } catch (e) {
     toast("加载失败：" + e.message);
     $("empty").style.display = "block";
