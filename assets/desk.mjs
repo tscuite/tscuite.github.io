@@ -54,6 +54,7 @@ async function initAuth() {
     if (user?.email) me = user;
   } catch { me = null; }
   renderUser();
+  await loadFoods(); // 登录态确定后再拉菜单，避免拿到默认菜单
 }
 function renderUser() {
   const chip = $("userNav");
@@ -330,4 +331,4 @@ async function loadNotes(append = false) {
 $("projectsReload").onclick = () => loadNotes();
 $("more").onclick = () => loadNotes(true);
 document.addEventListener("visibilitychange", () => { if (!document.hidden) { renderDate(); renderRest(); } });
-loadFoods(); loadHolidays(); loadWeather(); loadQuote(); loadNotes(); initAuth();
+loadHolidays(); loadWeather(); loadQuote(); loadNotes(); initAuth();
