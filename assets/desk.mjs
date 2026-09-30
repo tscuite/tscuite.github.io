@@ -1,5 +1,5 @@
 import { api, storeSessionToken, clearSessionToken } from "./api.mjs";
-import { updateChat } from "./chat.mjs?v=6";
+import { updateChat } from "./chat.mjs?v=7";
 import { LANGUAGE_COLORS, REPO_LINE, parseRepositories, normalizeFoods, chinaDate, dayNumber, addDays, dayOfWeek, restInfo, nextRest } from "./core.mjs";
 const $ = id => document.getElementById(id);
 const element = (tag, className, text) => {

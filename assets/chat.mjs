@@ -9,6 +9,7 @@ const el = (tag, className, text) => {
 let socket = null;
 let me = null;
 let unread = 0;
+let showIps = false;
 
 function isOpen() { return !$("chatWindow").hidden; }
 function setUnread(n) {
@@ -24,6 +25,12 @@ $("chatFab").onclick = () => {
   $("chatLog").scrollTop = $("chatLog").scrollHeight;
 };
 $("chatClose").onclick = () => { $("chatWindow").hidden = true; };
+// 管理员点击「在线 N 人」展开/收起 IP 列表
+$("chatPresence").onclick = () => {
+  if (!me?.isAdmin) return;
+  showIps = !showIps;
+  $("chatIpStrip").hidden = !showIps;
+};
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape" && isOpen()) { $("chatWindow").hidden = true; $("chatFab").focus(); }
 });
@@ -151,10 +158,11 @@ function handle(data) {
     $("chatFabPill").hidden = !data.count;
     $("chatFabPill").textContent = `${data.count} 人在线`;
     if (me?.isAdmin) {
-      const strip = $("chatIpStrip");
       const clients = data.clients || [];
-      strip.hidden = !clients.length;
+      const strip = $("chatIpStrip");
       strip.replaceChildren(...clients.map((c) => el("span", null, `${c.name} · ${c.ip || "IP 未知"}${c.guest ? " · 游客" : ""}`)));
+      strip.hidden = !(showIps && clients.length);
+      $("chatPresence").classList.toggle("clickable", clients.length > 0);
     }
   }
 }
