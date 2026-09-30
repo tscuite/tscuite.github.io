@@ -271,6 +271,7 @@ function renderRepositories() {
   }
   $("repoGrid").replaceChildren(fragment);
   $("repoGrid").setAttribute("aria-busy", "false");
+  $("projectsTitle").textContent = repos.length ? `Top ${repos.length} Stars` : "Top Stars";
   $("projectMessage").hidden = repos.length > 0;
   $("projectMessage").textContent = "还没有公开的项目快照。";
   $("repoCount").textContent = repos.length ? `${repos.length} 个项目 · 每日更新` : "GitHub Search API 数据快照";
