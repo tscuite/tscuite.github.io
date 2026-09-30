@@ -266,17 +266,19 @@ function renderRepositories() {
     link.href = repo.url; link.target = "_blank"; link.rel = "noopener noreferrer";
     const [owner, name] = repo.name.split("/");
     const heading = element("div", "repo-heading"), identity = element("div", "repo-identity");
-    identity.append(element("span", "repo-owner", owner), element("span", "repo-name", name));
+    identity.append(
+      element("span", "repo-owner", owner),
+      element("span", "repo-name", name),
+      element("span", "repo-desc-inline", ` — ${repo.description || "（无描述）"}`),
+    );
     const arrow = icon("arrow", true); arrow.classList.add("repo-arrow");
     heading.append(element("span", "repo-avatar", `#${repo.rank}`), identity, arrow);
-    const description = element("p", "repo-description", repo.description || "暂无项目简介");
-    description.title = repo.description;
     const meta = element("div", "repo-meta"), dot = element("span", "lang-dot");
     dot.style.background = LANGUAGE_COLORS[repo.language] || "#74819c";
     const stars = element("span", "repo-stars");
     stars.append(icon("star", true), document.createTextNode(repo.stars.toLocaleString("en-US")));
     meta.append(dot, element("span", "", repo.language), stars);
-    link.append(heading, description, meta); fragment.append(link);
+    link.append(heading, meta); fragment.append(link);
   }
   $("repoGrid").replaceChildren(fragment);
   $("repoGrid").setAttribute("aria-busy", "false");
