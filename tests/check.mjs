@@ -110,4 +110,4 @@ for (const selector of [":root", ":root[data-theme=dark]"]) {
   }
   assert(contrast(colors["on-accent"], colors.accent) >= 4.5);
 }
-console.log("PASS: 菜单、仓库、节假日、时区、主题切换/系统跟随/存储降级、明暗配色对比度");
+console.log("PASS: 菜单、仓库、节假日、时区、主题切换/默认夜间/手动记忆/存储降级、明暗配色对比度");
