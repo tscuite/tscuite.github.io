@@ -1,11 +1,11 @@
 /* 记忆页：复用 desk.css 的组件语言（.card/.filter/.search/quote-strip/页脚），只补列表与登录卡 */
-.mem-main{padding-top:22px}
-.setup-card{max-width:420px;margin:6vh auto 0;background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:28px;box-shadow:var(--shadow);text-align:center}
+.mem-main{padding-top:0;min-height:calc(100dvh - 260px)}
+.setup-card{max-width:420px;margin:3vh auto 0;background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:28px;box-shadow:var(--shadow);text-align:center}
 .setup-card h1{font-size:19px;margin-bottom:4px}
 .setup-card>p{color:var(--muted);font-size:13px;margin-bottom:10px}
 .setup-card label{display:block;text-align:left;font-size:12px;font-weight:600;margin:14px 0 6px}
-.setup-card input{width:100%;background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:11px 13px;color:var(--ink);font-size:13.5px;outline-offset:4px}
-.setup-card input:focus{border-color:var(--brand);outline:3px solid var(--brand)}
+.setup-card input{width:100%;background:var(--soft);border:1px solid var(--line-strong);border-radius:10px;padding:11px 13px;color:var(--ink);font-size:16px;outline-offset:2px}
+.setup-card input:focus{border-color:var(--brand);outline:2px solid var(--brand)}
 .setup-card .primary{width:100%}
 .mem-panel{padding:20px 24px 10px}
 .mem-panel .projects-heading p{font-size:12px;color:var(--muted);margin-top:8px}
@@ -23,23 +23,23 @@
 .mem-row.clickable{cursor:pointer}
 .mem-row.clickable:hover{background:var(--soft)}
 .mem-head{display:flex;align-items:baseline;gap:10px}
-.mem-head h3{font-size:14px;letter-spacing:-.1px;font-weight:650;min-width:0;overflow-wrap:anywhere}
+.mem-head h3{margin:0;font-size:14px;letter-spacing:-.1px;font-weight:650;min-width:0;overflow-wrap:anywhere}
 .mem-meta .time{margin-left:0;margin-right:auto;font-size:11px;color:var(--faint);white-space:nowrap}
 .mem-text{color:var(--muted);font-size:12.5px;margin-top:4px;white-space:pre-wrap;word-break:break-word}
 .mem-text.snippet{display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
 .mem-meta{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}
 .mem-meta .pill{font:10px ui-monospace,"SF Mono",Menlo,monospace;color:var(--faint);border:1px solid var(--line);border-radius:999px;padding:1px 7px}
-.mem-meta .pill.memory{color:#7aa7e8;border-color:#2a3a55}
-.mem-meta .pill.user{color:#7fc893;border-color:#24452f}
-.mem-meta .pill.failure{color:#f08a8a;border-color:#552a2a}
-:root[data-theme=light] .mem-meta .pill.memory{color:#3572a5;border-color:#cfe0f0}
-:root[data-theme=light] .mem-meta .pill.user{color:#15803d;border-color:#c8e6d2}
-:root[data-theme=light] .mem-meta .pill.failure{color:#b91c1c;border-color:#f0cfcf}
+.mem-meta .pill.memory{color:#3572a5;border-color:#cfe0f0}
+.mem-meta .pill.user{color:#15803d;border-color:#c8e6d2}
+.mem-meta .pill.failure{color:#b91c1c;border-color:#f0cfcf}
+:root[data-theme=dark] .mem-meta .pill.memory{color:#9abef0;border-color:#475b76}
+:root[data-theme=dark] .mem-meta .pill.user{color:#9ed6ac;border-color:#45654d}
+:root[data-theme=dark] .mem-meta .pill.failure{color:#f4a4a4;border-color:#754b4b}
 .mem-meta .pill.plain{color:var(--muted)}
 /* 抽屉 */
-#drawer{position:fixed;inset:0;background:rgba(20,15,5,.45);display:none;align-items:flex-end;justify-content:center;z-index:30}
+#drawer{position:fixed;inset:0;background:var(--backdrop);display:none;align-items:flex-end;justify-content:center;z-index:30}
 #drawer.open{display:flex}
-.drawer-panel{width:100%;max-width:760px;max-height:84vh;overflow-y:auto;background:var(--paper);border:1px solid var(--line);border-bottom:none;border-radius:18px 18px 0 0;padding:26px;color:var(--ink)}
+.drawer-panel{width:100%;max-width:760px;max-height:84dvh;overflow-y:auto;background:var(--paper);border:1px solid var(--line);border-bottom:none;border-radius:18px 18px 0 0;padding:26px;color:var(--ink)}
 .drawer-panel h2{font-size:19px;margin-bottom:12px}
 .content{white-space:pre-wrap;word-break:break-word;font-size:14.5px}
 .kv{margin-top:18px;border-top:1px solid var(--line);padding-top:14px;font-size:12.5px;color:var(--muted);display:grid;grid-template-columns:auto 1fr;gap:6px 14px}

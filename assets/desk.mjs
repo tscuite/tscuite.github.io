@@ -25,18 +25,6 @@ function toast(message) {
   toastTimer = setTimeout(() => { $("toast").hidden = true; }, 3500);
 }
 
-function updateThemeButton() {
-  const next = document.documentElement.dataset.theme === "dark" ? "浅色" : "深色";
-  $("themeToggle").setAttribute("aria-label", `切换${next}模式`);
-  $("themeToggle").title = `切换${next}模式`;
-}
-$("themeToggle").onclick = () => {
-  const theme = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
-  document.documentElement.dataset.theme = theme;
-  try { localStorage.setItem("desk-theme", theme); } catch { /* Theme still works without storage. */ }
-  updateThemeButton();
-};
-updateThemeButton();
 function renderDate() {
   const today = chinaDate();
   $("todayDate").dateTime = today;
@@ -213,6 +201,7 @@ function renderRest() {
     const date = addDays(today, n), info = restInfo(holidayYears, date);
     const pill = element("div", `day-pill${info.rest ? " rest" : ""}${n === 0 ? " today" : ""}`);
     pill.title = `${date} ${info.name}${info.known ? "" : "（估算）"}`;
+    pill.setAttribute("role", "img");
     pill.setAttribute("aria-label", pill.title);
     pill.append(element("span", "", n === 0 ? "今" : "日一二三四五六"[dayOfWeek(date)]), element("strong", "", date.slice(-2)));
     week.append(pill);
@@ -220,7 +209,7 @@ function renderRest() {
   $("weekStrip").replaceChildren(week);
   const upcoming = Object.values(holidayYears).flat().filter(h => h.StartDate > today).sort((a, b) => a.StartDate.localeCompare(b.StartDate))[0];
   $("holidayHint").textContent = known
-    ? (upcoming ? `${upcoming.Name} ${upcoming.StartDate.slice(5).replace("-", "/")} 开始 · 蓝色为休息日` : "蓝色为休息日，已排除调休补班")
+    ? (upcoming ? `${upcoming.StartDate.slice(5).replace("-", "/")} ${upcoming.Name} · 高亮为休息日` : "高亮为休息日，已排除调休补班")
     : "当年调休表暂无数据，补班日可能有偏差";
 }
 async function loadHolidays() {
@@ -265,20 +254,20 @@ function renderRepositories() {
     const link = element("a", "repo");
     link.href = repo.url; link.target = "_blank"; link.rel = "noopener noreferrer";
     const [owner, name] = repo.name.split("/");
+    link.title = `${repo.name}：${repo.description || "暂无描述"}`;
     const heading = element("div", "repo-heading"), identity = element("div", "repo-identity");
-    identity.append(
-      element("span", "repo-owner", owner),
-      element("span", "repo-name", name),
-      element("span", "repo-desc-inline", ` — ${repo.description || "（无描述）"}`),
-    );
-    const arrow = icon("arrow", true); arrow.classList.add("repo-arrow");
-    heading.append(element("span", "repo-avatar", `#${repo.rank}`), identity, arrow);
-    const meta = element("div", "repo-meta"), dot = element("span", "lang-dot");
+    identity.append(element("span", "repo-owner", `${owner} / `), element("span", "repo-name", name));
+    heading.append(identity, element("span", "repo-desc-inline", repo.description || "暂无描述"));
+    const meta = element("div", "repo-meta"), language = element("span", "repo-language"), dot = element("span", "lang-dot");
     dot.style.background = LANGUAGE_COLORS[repo.language] || "#74819c";
+    language.append(dot, element("span", "", repo.language));
     const stars = element("span", "repo-stars");
+    stars.setAttribute("role", "img");
+    stars.setAttribute("aria-label", `${repo.stars.toLocaleString("en-US")} stars`);
     stars.append(icon("star", true), document.createTextNode(repo.stars.toLocaleString("en-US")));
-    meta.append(dot, element("span", "", repo.language), stars);
-    link.append(heading, meta); fragment.append(link);
+    meta.append(language, stars);
+    link.append(element("span", "repo-rank", String(repo.rank).padStart(2, "0")), heading, meta);
+    fragment.append(link);
   }
   $("repoGrid").replaceChildren(fragment);
   $("repoGrid").setAttribute("aria-busy", "false");
@@ -286,7 +275,6 @@ function renderRepositories() {
   $("projectMessage").textContent = "还没有公开的项目快照。";
   $("repoCount").textContent = repos.length ? `${repos.length} 个项目 · 每日更新` : "GitHub Search API 数据快照";
 }
-function updateScrollButtons() { /* 列表模式不再需要 */ }
 function renderNote(item) {
   const article = element("article", "note");
   article.append(element("h2", "", item.subject || "未命名笔记"), element("time", "", String(item.created_at || "").slice(0, 10)));
@@ -307,7 +295,7 @@ function renderItems() {
   const latest = entries.find(isTrending);
   repos = latest ? parseRepositories(latest.content).map((repo, index) => ({ ...repo, rank: index + 1 })) : [];
   const date = latest?.subject?.match(/\d{4}-\d{2}-\d{2}/)?.[0] || String(latest?.created_at || "").slice(0, 10);
-  $("digestInfo").textContent = latest ? `${date} 快照 · 近 7 天新建 · 按 Star 排序（非实时榜单）` : "近 7 天新创建的项目，按 Star 排序。";
+  $("digestInfo").textContent = latest ? `${date} 快照 · 近 7 天新建 · 按 Star 排序` : "近 7 天新创建的项目，按 Star 排序。";
   renderRepositories();
   const notes = entries.filter(item => !isTrending(item));
   $("feed").replaceChildren(...notes.map(renderNote));
@@ -318,7 +306,9 @@ async function loadNotes(append = false) {
   loading = true;
   $("projectsReload").disabled = $("more").disabled = true;
   $("feedStatus").textContent = "";
+  $("repoGrid").setAttribute("aria-busy", "true");
   if (!append && !items.size) {
+    $("projectMessage").hidden = true;
     // 骨架屏：避免首屏空荡荡
     $("repoGrid").innerHTML = Array.from({ length: 8 }, () => `
       <div class="skeleton-row">
@@ -338,7 +328,11 @@ async function loadNotes(append = false) {
     $("more").hidden = !afterId;
     renderItems();
   } catch (error) {
-    if (!items.size) { $("projectMessage").hidden = false; $("projectMessage").textContent = "项目暂时没加载出来，点击右上角刷新重试。"; }
+    if (!items.size) {
+      $("repoGrid").replaceChildren();
+      $("projectMessage").hidden = false;
+      $("projectMessage").textContent = "项目暂时没加载出来，点击右上角刷新重试。";
+    }
     else $("feedStatus").textContent = "读取失败，保留当前内容，请重试。";
   } finally {
     $("repoGrid").setAttribute("aria-busy", "false");

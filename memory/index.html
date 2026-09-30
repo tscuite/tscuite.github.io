@@ -4,8 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#f6f5f1">
   <title>记忆 · tscuite</title>
-  <script>try { document.documentElement.dataset.theme = localStorage.getItem('desk-theme') || 'dark'; } catch { document.documentElement.dataset.theme = 'dark'; }</script>
+  <script src="/assets/theme.js"></script>
   <link rel="icon" href="/assets/mark.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/assets/desk.css">
   <link rel="stylesheet" href="/assets/memory.css">
@@ -13,10 +14,12 @@
 <body>
 <svg class="icon-definitions" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
   <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20.5 13A8.5 8.5 0 0 1 11 3.5 8.5 8.5 0 1 0 20.5 13Z"/></symbol>
   <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M6 18 18 6M6 6h12v12"/></symbol>
   <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></symbol>
   <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 7v5h-5M4 17v-5h5M5 7a8 8 0 0 1 13-2l2 3M4 16l2 3a8 8 0 0 0 13-2"/></symbol>
 </defs></svg>
+<a class="skip" href="#memoryMain">跳到记忆内容</a>
 <header class="topbar">
   <a class="brand" href="/" aria-label="回到小桌面"><span class="brand-mark">t.</span><span>tscuite</span></a>
   <nav aria-label="站点导航">
@@ -25,7 +28,7 @@
     <a href="https://github.com/tscuite" target="_blank" rel="noopener noreferrer">GitHub <svg class="icon small" aria-hidden="true"><use href="#i-arrow"/></svg></a>
   </nav>
   <button class="user-chip" id="userNav" hidden>登录</button>
-  <button class="icon-button" id="themeToggle" aria-label="切换深色模式" title="切换深色模式"><svg class="icon" aria-hidden="true"><use href="#i-sun"/></svg></button>
+  <button class="icon-button" id="themeToggle" aria-label="切换夜间模式" title="切换夜间模式"><svg class="icon" aria-hidden="true"><use href="#i-moon"/></svg></button>
 </header>
 <div class="page">
   <section class="quote-strip" aria-label="每日一言">
@@ -34,7 +37,7 @@
     <blockquote id="hitokoto">正在取一句话…</blockquote>
     <span class="quote-from" id="hitokotoFrom"></span>
   </section>
-  <div class="mem-main">
+  <main class="mem-main" id="memoryMain">
     <div id="setup">
       <div class="setup-card">
         <h1>登录记忆</h1>
@@ -79,9 +82,9 @@
         </form>
       </section>
     </div>
-  </div>
+  </main>
+  <footer class="site-footer"><span>tscuite 的小桌面</span><a href="https://github.com/tscuite" target="_blank" rel="noopener noreferrer">在 GitHub 找到我 <svg class="icon small" aria-hidden="true"><use href="#i-arrow"/></svg></a></footer>
 </div>
-<footer><span>tscuite 的小桌面</span><span>菜单存云端 · 公开数据按需读取</span></footer>
 
 <div id="drawer"><div class="drawer-panel" id="drawerPanel"></div></div>
 
@@ -293,19 +296,6 @@ function showSetup() {
   $("app").hidden = true; $("setup").hidden = false;
   renderUser();
 }
-
-function updateThemeButton() {
-  const next = document.documentElement.dataset.theme === "dark" ? "浅色" : "深色";
-  $("themeToggle").setAttribute("aria-label", `切换${next}模式`);
-  $("themeToggle").title = `切换${next}模式`;
-}
-$("themeToggle").onclick = () => {
-  const theme = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
-  document.documentElement.dataset.theme = theme;
-  try { localStorage.setItem("desk-theme", theme); } catch { /* 不阻断 */ }
-  updateThemeButton();
-};
-updateThemeButton();
 
 $("connect").onclick = async () => {
   const email = $("email").value.trim();
