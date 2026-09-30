@@ -98,8 +98,15 @@ h1, h2, p { margin: 0; }
 .meal-button:hover { filter: brightness(1.05); border-color: var(--brand); }
 .meal-button:active { transform: translateY(1px); }
 .food-status { text-align: center; font-size: 11px; color: var(--muted); margin-top: 12px; }
-.food-float { position: absolute; left: 10%; top: 48%; pointer-events: none; color: var(--brand); opacity: 0; font-size: 13px; animation: float-food .9s ease-out forwards; }
-@keyframes float-food { 20% { opacity: .7; } to { transform: translateY(-70px); opacity: 0; } }
+.food-float { position: absolute; left: 50%; top: 50%; pointer-events: none; color: var(--brand); opacity: 0; font-size: 13px; font-weight: 700; animation: float-food 1s ease-out forwards; }
+@keyframes float-food { 0% { opacity: 0; transform: translate(0, 0) scale(.6) rotate(0deg); } 25% { opacity: .9; } to { opacity: 0; transform: translate(var(--dx, 0), -90px) scale(1.15) rotate(var(--rot, 0deg)); } }
+.food-name.reeling { animation: reel .14s linear infinite; color: var(--muted); }
+@keyframes reel { 0% { transform: translateY(-2px); filter: blur(1px); opacity: .8; } to { transform: translateY(2px); filter: blur(3px); opacity: .45; } }
+.food-name.landing { animation: land .5s cubic-bezier(.34, 1.56, .64, 1); color: var(--brand); }
+@keyframes land { 0% { transform: scale(1.25); filter: blur(2px); } to { transform: scale(1); filter: none; } }
+.meal-button.rolling { background: var(--soft); color: var(--muted); }
+.meal-button.rolling .icon { animation: spin .6s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
 .rest-card { padding: 20px; }
 .rest-result { display: flex; align-items: center; gap: 14px; margin: 16px 0 20px; }
 .rest-result strong { font-size: 44px; line-height: 1; font-weight: 650; letter-spacing: -2px; font-variant-numeric: tabular-nums; color: var(--brand); }

@@ -74,32 +74,50 @@ function scatter(word) {
   const node = element("span", "food-float", word);
   node.setAttribute("aria-hidden", "true");
   node.style.left = `${10 + Math.random() * 60}%`;
+  node.style.setProperty("--dx", `${Math.round(-46 + Math.random() * 92)}px`);
+  node.style.setProperty("--rot", `${Math.round(-18 + Math.random() * 36)}deg`);
+  node.style.fontSize = `${13 + Math.round(Math.random() * 7)}px`;
+  node.style.color = Math.random() < 0.5 ? "var(--brand)" : "var(--accent)";
   $("foodBody").append(node);
-  setTimeout(() => node.remove(), 950);
+  setTimeout(() => node.remove(), 1100);
 }
 $("reroll").onclick = () => {
   if (rolling) return;
   rolling = true;
   $("reroll").disabled = true;
-  const previous = $("foodName").textContent;
+  $("reroll").classList.add("rolling");
+  $("reroll").querySelector("span").textContent = "选择中…";
+  const name = $("foodName");
+  const previous = name.textContent;
+  name.classList.add("reeling");
   $("foodHint").textContent = "让我想想…";
   const finish = () => {
+    name.classList.remove("reeling");
     const candidates = foods.filter(f => f !== previous);
     const pool = candidates.length ? candidates : foods;
-    $("foodName").textContent = pool[Math.floor(Math.random() * pool.length)];
+    const dish = pool[Math.floor(Math.random() * pool.length)];
+    name.textContent = dish;
+    name.classList.add("landing");
+    for (let n = 0; n < 3; n++) scatter(dish);
+    setTimeout(() => name.classList.remove("landing"), 500);
     $("foodHint").textContent = "就吃这个，不纠结了。";
+    $("reroll").classList.remove("rolling");
     $("reroll").querySelector("span").textContent = "不行，再选一次";
     $("reroll").disabled = false;
     rolling = false;
   };
   if (matchMedia("(prefers-reduced-motion: reduce)").matches) return finish();
-  let ticks = 0;
-  const timer = setInterval(() => {
+  // 老虎机式减速：先快后慢，越来越接近开奖
+  let ticks = 0, delay = 55;
+  const tick = () => {
     const word = foods[Math.floor(Math.random() * foods.length)];
-    $("foodName").textContent = word;
-    if (ticks % 3 === 0) scatter(word);
-    if (++ticks === 14) { clearInterval(timer); finish(); }
-  }, 70);
+    name.textContent = word;
+    if (Math.random() < 0.75) scatter(word);
+    if (++ticks >= 18) return finish();
+    delay *= 1.1;
+    setTimeout(tick, delay);
+  };
+  tick();
 };
 $("foodEdit").onclick = async () => {
   if (!me) { $("registerDialog").showModal(); return; }
