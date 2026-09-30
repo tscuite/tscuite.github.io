@@ -6,11 +6,11 @@
   <meta name="color-scheme" content="light dark">
   <meta name="theme-color" content="#f6f5f1">
   <title>Memory · tscuite</title>
-  <script src="/assets/theme.js"></script>
+  <script src="/assets/theme.js?v=3"></script>
   <script>document.documentElement.dataset.pending = '1';</script>
   <link rel="icon" href="/assets/mark.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="/assets/desk.css">
-  <link rel="stylesheet" href="/assets/memory.css">
+  <link rel="stylesheet" href="/assets/desk.css?v=3">
+  <link rel="stylesheet" href="/assets/memory.css?v=3">
 </head>
 <body>
 <svg class="icon-definitions" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
@@ -35,7 +35,7 @@
   <section class="quote-strip" aria-label="每日一言">
     <time id="todayDate"></time>
     <span class="strip-sep" aria-hidden="true"></span>
-    <blockquote id="hitokoto">正在取一句话…</blockquote>
+    <blockquote id="hitokoto"></blockquote>
     <span class="quote-from" id="hitokotoFrom"></span>
   </section>
   <main class="mem-main" id="memoryMain">
@@ -147,7 +147,7 @@ async function loadQuote() {
     $("hitokoto").textContent = quote.hitokoto;
     $("hitokotoFrom").textContent = quote.from || "一言";
   } catch {
-    $("hitokoto").textContent = "一言暂时没有连接上。";
+    $("hitokoto").textContent = "";
     $("hitokotoFrom").textContent = "";
   }
 }

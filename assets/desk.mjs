@@ -244,7 +244,7 @@ async function loadQuote() {
     if (typeof quote.hitokoto !== "string" || !quote.hitokoto) throw new Error();
     $("hitokoto").textContent = quote.hitokoto;
     $("hitokotoFrom").textContent = quote.from || "一言";
-  } catch { $("hitokoto").textContent = "一言暂时没有连接上。"; $("hitokotoFrom").textContent = ""; }
+  } catch { $("hitokoto").textContent = ""; $("hitokotoFrom").textContent = ""; }
 }
 
 let items = new Map(), afterId = null, loading = false, repos = [];

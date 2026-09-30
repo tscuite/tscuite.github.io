@@ -76,9 +76,10 @@ blocked.click();
 assert.equal(blocked.theme(), "light", "Blocked storage must not break the toggle");
 for (const page of ["index.html", "memory/index.html"]) {
   const html = readFileSync(new URL(`../${page}`, import.meta.url), "utf8");
-  const bootstrap = html.indexOf('<script src="/assets/theme.js">');
+  const bootstrap = html.indexOf('/assets/theme.js');
   assert(bootstrap >= 0 && bootstrap < html.indexOf('rel="stylesheet"'), "Apply theme before CSS");
   assert(html.includes('id="i-moon"') && html.includes('id="themeToggle"'));
+  assert(!html.includes('正在取一句话'), "Quote placeholder removed");
 }
 // 记忆页：有 token 时首屏隐藏登录卡（内联脚本 + 样式双重保证）
 {
