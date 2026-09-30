@@ -30,10 +30,9 @@ assert.equal(chinaDate(new Date("2026-09-30T16:01:00Z")), "2026-10-01");
 
 // The same pre-paint theme script serves the desk and memory page.
 const themeScript = readFileSync(new URL("../assets/theme.js", import.meta.url), "utf8");
-function themePage({ saved = null, dark = false, blocked = false } = {}) {
+function themePage({ saved = null, blocked = false } = {}) {
   const state = { saved, icon: null, label: null, chrome: null };
   const listeners = {};
-  const system = { matches: dark, addEventListener: (_, fn) => { listeners.system = fn; } };
   const button = {
     setAttribute: (_, value) => { state.label = value; },
     querySelector: () => ({ setAttribute: (_, value) => { state.icon = value; } }),
@@ -46,7 +45,7 @@ function themePage({ saved = null, dark = false, blocked = false } = {}) {
     addEventListener: (_, fn) => { listeners.ready = fn; },
   };
   runInNewContext(themeScript, {
-    document, matchMedia: () => system,
+    document,
     localStorage: {
       getItem() { if (blocked) throw new Error("blocked"); return state.saved; },
       setItem(_, value) { if (blocked) throw new Error("blocked"); state.saved = value; },
@@ -55,25 +54,24 @@ function themePage({ saved = null, dark = false, blocked = false } = {}) {
   const firstPaint = document.documentElement.dataset.theme;
   state.ready = true;
   listeners.ready();
-  return { state, firstPaint, theme: () => document.documentElement.dataset.theme, click: listeners.click,
-    systemChange(value) { system.matches = value; listeners.system(); } };
+  return { state, firstPaint, theme: () => document.documentElement.dataset.theme, click: listeners.click };
 }
 const automatic = themePage();
-assert.equal(automatic.firstPaint, "light");
-assert.equal(automatic.state.icon, "#i-moon");
-automatic.systemChange(true);
-assert.equal(automatic.theme(), "dark");
+assert.equal(automatic.firstPaint, "dark", "无偏好时默认夜间");
+assert.equal(automatic.state.icon, "#i-sun");
 assert.equal(automatic.state.label, "切换日间模式");
 assert.equal(automatic.state.chrome, "#17191c");
 automatic.click();
 assert.equal(automatic.theme(), "light");
 assert.equal(automatic.state.saved, "light");
-automatic.systemChange(true);
-assert.equal(automatic.theme(), "light", "Manual preference must win over system changes");
+assert.equal(automatic.state.icon, "#i-moon");
+automatic.click();
+assert.equal(automatic.theme(), "dark");
+assert.equal(automatic.state.saved, "dark");
 assert.equal(themePage({ saved: "dark" }).firstPaint, "dark");
-assert.equal(themePage({ saved: "light", dark: true }).firstPaint, "light");
-assert.equal(themePage({ saved: "invalid", dark: true }).firstPaint, "dark");
-const blocked = themePage({ blocked: true, dark: true });
+assert.equal(themePage({ saved: "light" }).firstPaint, "light", "手动选择优先于默认夜间");
+assert.equal(themePage({ saved: "invalid" }).firstPaint, "dark");
+const blocked = themePage({ blocked: true });
 blocked.click();
 assert.equal(blocked.theme(), "light", "Blocked storage must not break the toggle");
 for (const page of ["index.html", "memory/index.html"]) {

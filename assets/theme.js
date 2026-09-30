@@ -1,12 +1,11 @@
 // Runs before the stylesheet so both pages paint in the correct theme.
 (() => {
-  const system = matchMedia("(prefers-color-scheme: dark)");
   let preference;
   try { preference = localStorage.getItem("desk-theme"); } catch { /* Storage is optional. */ }
   if (!["light", "dark"].includes(preference)) preference = null;
 
   function apply() {
-    const theme = preference || (system.matches ? "dark" : "light");
+    const theme = preference || "dark"; // 无手动偏好时默认夜间
     document.documentElement.dataset.theme = theme;
     document.querySelector('meta[name="theme-color"]')?.setAttribute("content", theme === "dark" ? "#17191c" : "#f6f5f1");
     const button = document.getElementById("themeToggle");
@@ -17,7 +16,6 @@
   }
 
   apply();
-  system.addEventListener("change", () => { if (!preference) apply(); });
   document.addEventListener("DOMContentLoaded", () => {
     apply();
     document.getElementById("themeToggle").addEventListener("click", () => {
