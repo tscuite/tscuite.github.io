@@ -1,5 +1,5 @@
 /* 记忆页：复用 desk.css 的组件语言（.card/.filter/.search/quote-strip/页脚），只补列表与登录卡 */
-/* 有会话 token 时首屏不渲染登录卡，避免闪一下 */
+/* 首屏先显示连接状态，登录态确认前不渲染登录卡，避免闪现 */
 :root[data-pending] #setup { display: none; }
 :root[data-pending] #authLoading { display: block !important; }
 .mem-main{padding-top:0;min-height:calc(100dvh - 260px)}

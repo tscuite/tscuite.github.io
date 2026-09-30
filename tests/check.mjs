@@ -84,8 +84,8 @@ for (const page of ["index.html", "memory/index.html"]) {
 {
   const memoryHtml = readFileSync(new URL("../memory/index.html", import.meta.url), "utf8");
   const memoryCss = readFileSync(new URL("../assets/memory.css", import.meta.url), "utf8");
-  assert(memoryHtml.includes("dataset.pending") && memoryHtml.includes("desk_session"));
-  assert(memoryHtml.includes('id="authLoading"') && memoryHtml.includes("sessionToken"));
+  assert(memoryHtml.includes("dataset.pending = '1'"));
+  assert(memoryHtml.includes('id="authLoading"'));
   assert(memoryCss.includes(":root[data-pending] #setup") && memoryCss.includes(":root[data-pending] #authLoading"));
 }
 
