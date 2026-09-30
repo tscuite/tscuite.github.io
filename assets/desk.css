@@ -13,7 +13,6 @@
   --brand: #946020;
   --accent: #efb96c;
   --on-accent: #302310;
-  --meal: #fbf3e4;
   --error: #b33440;
   --shadow: 0 2px 4px #292d3203, 0 12px 30px -24px #292d3233;
   --overlay-shadow: 0 24px 80px #292d3226;
@@ -34,7 +33,6 @@
   --brand: #edb56c;
   --accent: #edb56c;
   --on-accent: #302310;
-  --meal: #2b2823;
   --error: #ff9ba4;
   --shadow: none;
   --overlay-shadow: 0 24px 80px #0006;
@@ -92,12 +90,11 @@ h1, h2, p { margin: 0; }
 .section-top h2 { font-size: 14px; font-weight: 650; letter-spacing: -.2px; }
 .quiet { font-size: 11px; color: var(--faint); }
 
-/* Daily tools: one warm meal card, the calendar and weather stay quiet. */
-.meal { background: var(--meal); border: 1px solid color-mix(in srgb, var(--brand) 20%, var(--line)); border-radius: 18px; padding: 18px 22px; position: relative; overflow: hidden; }
-.meal .section-top h2 { color: var(--brand); }
-.food-name { text-align: center; font-size: 34px; line-height: 1.3; font-weight: 700; letter-spacing: -1px; overflow-wrap: anywhere; padding: 22px 0 6px; min-height: 72px; }
+/* Daily tools: three cards sharing one language; the meal button carries the accent. */
+.meal { background: var(--paper); border: 1px solid var(--line); box-shadow: var(--shadow); border-radius: 18px; padding: 20px; position: relative; overflow: hidden; }
+.food-name { text-align: center; font-size: 30px; line-height: 1.35; font-weight: 700; letter-spacing: -.5px; overflow-wrap: anywhere; padding: 16px 0 4px; min-height: 0; }
 .meal-hint { text-align: center; font-size: 12px; color: var(--muted); }
-.meal-button { background: var(--accent); color: var(--on-accent); border: 1px solid transparent; border-radius: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 44px; margin-top: 20px; padding: 10px; font-weight: 650; font-size: 13px; }
+.meal-button { background: var(--accent); color: var(--on-accent); border: 1px solid transparent; border-radius: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 44px; margin-top: 16px; padding: 10px; font-weight: 650; font-size: 13px; }
 .meal-button:hover { filter: brightness(1.05); border-color: var(--brand); }
 .meal-button:active { transform: translateY(1px); }
 .food-status { text-align: center; font-size: 11px; color: var(--muted); margin-top: 12px; }

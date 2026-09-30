@@ -104,7 +104,7 @@ for (const selector of [":root", ":root[data-theme=dark]"]) {
   const block = css.slice(css.indexOf(selector)).split("}")[0];
   const colors = Object.fromEntries([...block.matchAll(/--([\w-]+):\s*(#[a-f\d]{6});/gi)].map(match => [match[1], match[2]]));
   for (const fg of ["ink", "muted", "faint", "brand"]) {
-    for (const bg of ["bg", "paper", "soft", "wash", "meal"]) {
+    for (const bg of ["bg", "paper", "soft", "wash"]) {
       assert(contrast(colors[fg], colors[bg]) >= 4.5, `${selector}: ${fg} on ${bg} needs 4.5:1 contrast`);
     }
   }
