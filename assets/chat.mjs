@@ -1,4 +1,4 @@
-import { API_ORIGIN, sessionToken } from "./api.mjs";
+import { API_ORIGIN } from "./api.mjs";
 const $ = (id) => document.getElementById(id);
 const el = (tag, className, text) => {
   const node = document.createElement(tag);
@@ -62,9 +62,8 @@ export function updateChat(user) {
 }
 
 function connectAuthed() {
-  const token = sessionToken();
-  if (!token) return;
-  openSocket("/api/chat/ws?token=" + token);
+  // 会话 cookie 会在 WS 握手时自动带上（worker 优先读 cookie），不再拼 query 泄露 token
+  openSocket("/api/chat/ws");
 }
 function connectGuest() {
   openSocket("/api/chat/ws");

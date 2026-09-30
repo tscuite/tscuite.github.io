@@ -7,10 +7,11 @@
   <meta name="color-scheme" content="light dark">
   <meta name="theme-color" content="#f6f5f1">
   <title>tscuite</title>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self' https://memory.tscuite.workers.dev wss://memory.tscuite.workers.dev; object-src 'none'; base-uri 'self'; form-action 'self'">
   <script src="/assets/theme.js?v=3"></script>
   <link rel="icon" href="/assets/mark.svg?v=5" type="image/svg+xml">
-  <link rel="stylesheet" href="/assets/desk.css?v=9">
-  <script type="module" src="/assets/desk.mjs?v=7"></script>
+  <link rel="stylesheet" href="/assets/desk.css?v=10">
+  <script type="module" src="/assets/desk.mjs?v=8"></script>
   <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
 </head>
 <body>
@@ -94,7 +95,7 @@
   <form id="registerForm" data-mode="login">
     <div class="dialog-heading"><h2 id="registerDialogTitle">登录</h2><button type="button" id="registerCancel" class="icon-button" aria-label="关闭登录窗口">×</button></div>
     <label for="registerEmail">邮箱</label><input id="registerEmail" type="email" autocomplete="email" required placeholder="you@example.com">
-    <label for="registerPassword">密码</label><input id="registerPassword" type="password" autocomplete="current-password" required minlength="6" placeholder="至少 6 位">
+    <label for="registerPassword">密码</label><input id="registerPassword" type="password" autocomplete="current-password" required minlength="10" placeholder="至少 10 位">
     <p class="field-hint">没有账号？找 tscuite 开通。</p>
     <p id="registerStatus" class="form-status" role="status"></p><div class="dialog-actions"><button class="primary" id="registerSubmit" type="submit">登录</button></div>
   </form>
