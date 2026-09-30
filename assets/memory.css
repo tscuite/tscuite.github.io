@@ -1,4 +1,7 @@
 /* 记忆页：复用 desk.css 的组件语言（.card/.filter/.search/quote-strip/页脚），只补列表与登录卡 */
+/* 有会话 token 时首屏不渲染登录卡，避免闪一下 */
+:root[data-pending] #setup { display: none; }
+:root[data-pending] #authLoading { display: block !important; }
 .mem-main{padding-top:0;min-height:calc(100dvh - 260px)}
 .setup-card{max-width:420px;margin:3vh auto 0;background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:28px;box-shadow:var(--shadow);text-align:center}
 .setup-card h1{font-size:19px;margin-bottom:4px}

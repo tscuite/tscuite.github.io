@@ -7,6 +7,7 @@
   <meta name="theme-color" content="#f6f5f1">
   <title>记忆 · tscuite</title>
   <script src="/assets/theme.js"></script>
+  <script>try { if (localStorage.getItem('desk_session')) document.documentElement.dataset.pending = '1'; } catch { /* 无存储时按未登录展示 */ }</script>
   <link rel="icon" href="/assets/mark.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/assets/desk.css">
   <link rel="stylesheet" href="/assets/memory.css">
@@ -38,6 +39,7 @@
     <span class="quote-from" id="hitokotoFrom"></span>
   </section>
   <main class="mem-main" id="memoryMain">
+    <p class="state-message" id="authLoading" hidden>正在恢复登录…</p>
     <div id="setup">
       <div class="setup-card">
         <h1>登录记忆</h1>
@@ -99,7 +101,7 @@
 <div id="toast" class="toast" role="status" hidden></div>
 
 <script type="module">
-import { api, storeSessionToken, clearSessionToken } from "/assets/api.mjs";
+import { api, sessionToken, storeSessionToken, clearSessionToken } from "/assets/api.mjs";
 const $ = (id) => document.getElementById(id);
 
 const TARGETS = [
@@ -272,6 +274,8 @@ function renderUser() {
   if (me) $("userNav").textContent = me.name || me.email;
 }
 function showApp() {
+  delete document.documentElement.dataset.pending;
+  $("authLoading").hidden = true;
   $("setup").hidden = true;
   $("app").hidden = false;
   renderUser();
@@ -288,9 +292,11 @@ function showApp() {
   }
   load(false);
 }
-function showSetup() {
+function showSetup(clear = true) {
+  delete document.documentElement.dataset.pending;
+  $("authLoading").hidden = true;
   activeRequest?.abort();
-  clearSessionToken();
+  if (clear) clearSessionToken();
   me = null; $("list").replaceChildren(); closeDrawer();
   state.afterId = null;
   $("app").hidden = true; $("setup").hidden = false;
@@ -359,10 +365,15 @@ document.addEventListener("click", (e) => {
 $("drawer").addEventListener("click", (e) => { if (e.target === $("drawer")) closeDrawer(); });
 
 (async () => {
+  if (!sessionToken()) return; // 无 token：登录卡直接可见，无需等待
   try {
     const { user } = await api("/api/auth/me");
-    if (user?.email) { me = user; showApp(); }
-  } catch { /* 未登录 */ }
+    if (user?.email) { me = user; showApp(); return; }
+    showSetup(true);
+  } catch (error) {
+    // 401 才清 token；网络/服务抖动时保留，下次刷新可自动恢复
+    showSetup(error.message === "请先登录");
+  }
 })();
 </script>
 </body>

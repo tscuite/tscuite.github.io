@@ -82,6 +82,14 @@ for (const page of ["index.html", "memory/index.html"]) {
   assert(bootstrap >= 0 && bootstrap < html.indexOf('rel="stylesheet"'), "Apply theme before CSS");
   assert(html.includes('id="i-moon"') && html.includes('id="themeToggle"'));
 }
+// 记忆页：有 token 时首屏隐藏登录卡（内联脚本 + 样式双重保证）
+{
+  const memoryHtml = readFileSync(new URL("../memory/index.html", import.meta.url), "utf8");
+  const memoryCss = readFileSync(new URL("../assets/memory.css", import.meta.url), "utf8");
+  assert(memoryHtml.includes("dataset.pending") && memoryHtml.includes("desk_session"));
+  assert(memoryHtml.includes('id="authLoading"') && memoryHtml.includes("sessionToken"));
+  assert(memoryCss.includes(":root[data-pending] #setup") && memoryCss.includes(":root[data-pending] #authLoading"));
+}
 
 // Small text and filled controls must remain readable in both palettes.
 function luminance(hex) {
