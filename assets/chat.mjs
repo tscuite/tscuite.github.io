@@ -15,6 +15,7 @@ function setUnread(n) {
   unread = Math.max(0, n);
   $("chatFabBadge").hidden = unread === 0;
   $("chatFabBadge").textContent = unread > 99 ? "99+" : String(unread);
+  $("chatFab").classList.toggle("unread", unread > 0);
 }
 $("chatFab").onclick = () => {
   $("chatWindow").hidden = false;
@@ -29,8 +30,6 @@ document.addEventListener("keydown", (e) => {
 
 export function updateChat(user) {
   me = user;
-  $("bombStart").disabled = true;
-  $("bombGuess").disabled = true;
   if (socket) {
     socket.onclose = null;
     socket.close();
@@ -51,7 +50,7 @@ export function updateChat(user) {
   $("chatInput").placeholder = "匿名留言，只记录不回复…";
   $("chatStatus").textContent = "匿名留言模式 · 仅记录";
   $("aiToggleWrap").hidden = true;
-  $("chatLog").replaceChildren(el("div", "chat-system", "登录后可进入聊天室和游戏；匿名留言只被记录"));
+  $("chatLog").replaceChildren(welcomeBlock());
   connectGuest();
 }
 
@@ -83,6 +82,23 @@ function openSocket(path) {
   };
 }
 
+function welcomeBlock() {
+  const box = el("div", "chat-welcome");
+  box.append(el("p", "chat-welcome-title", "👋 欢迎来聊天室"));
+  box.append(el("p", "chat-welcome-sub", me ? "随便聊聊，小助手也在" : "登录后进入聊天室；匿名留言只被记录"));
+  if (me) {
+    const chips = el("div", "chat-welcome-chips");
+    for (const t of ["有人在吗", "今天过得怎么样"]) {
+      const b = el("button", "chat-chip", t);
+      b.type = "button";
+      b.onclick = () => sendChat(t);
+      chips.append(b);
+    }
+    box.append(chips);
+  }
+  return box;
+}
+
 function addLine(node) {
   $("chatLog").append(node);
   $("chatLog").scrollTop = $("chatLog").scrollHeight;
@@ -92,94 +108,60 @@ const fmtTime = (ts) => {
   return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
 };
 
-function renderChat(m) {
+function renderChat(m, animate = false) {
   // Ask AI 风格：自己的消息右侧高亮气泡，小助手/他人左侧带名字
   const own = me && m.user !== "小助手" && m.user === (me.name || me.email);
-  const bubble = el("div", `chat-msg${own ? " own" : ""}${m.user === "小助手" ? " assistant" : ""}`);
+  const isAssistant = m.user === "小助手";
+  const bubble = el("div", `chat-msg${own ? " own" : ""}${isAssistant ? " assistant" : ""}`);
   if (!own) bubble.append(el("span", "chat-user", m.user));
-  const body = el("div", "chat-bubble", m.text);
+  const body = el("div", "chat-bubble");
   bubble.append(body, el("span", "chat-time", fmtTime(m.ts)));
-  addLine(bubble);
+  if (animate && isAssistant) {
+    body.classList.add("typing");
+    body.append(el("i"), el("i"), el("i"));
+    addLine(bubble);
+    setTimeout(() => {
+      body.classList.remove("typing");
+      body.replaceChildren(document.createTextNode(m.text));
+      $("chatLog").scrollTop = $("chatLog").scrollHeight;
+    }, 400 + Math.min(m.text.length * 20, 900));
+  } else {
+    body.textContent = m.text;
+    addLine(bubble);
+  }
 }
 function renderSystem(text) {
   addLine(el("div", "chat-system", text));
-}
-function renderGame(game, by) {
-  if (!game) {
-    $("bombRange").textContent = "未开局";
-    $("bombBar").style.width = "0%";
-    $("bombStatus").textContent = "";
-    return;
-  }
-  if (game.over) {
-    $("bombRange").textContent = "本局结束";
-    $("bombBar").style.width = "0%";
-  } else {
-    $("bombRange").textContent = `${game.min} ~ ${game.max}`;
-    $("bombBar").style.width = `${Math.max(3, ((game.max - game.min) / 98) * 100)}%`;
-  }
-  if (by) $("bombStatus").textContent = `${by} 猜了，区间收窄到 ${game.min}~${game.max}`;
-  renderScores(game.scores);
-}
-function renderScores(scores) {
-  const entries = Object.entries(scores || {}).sort((a, b) => b[1] - a[1]).slice(0, 5);
-  $("bombScores").replaceChildren(...entries.map(([name, wins]) => el("span", "score-pill", `${name} ${wins} 分`)));
-}
-function renderBoom(data) {
-  $("bombRange").textContent = `本局结束 · ${data.number}`;
-  $("bombBar").style.width = "0%";
-  $("bombStatus").textContent = `💥 ${data.winner} 踩中了炸弹！4 秒后自动开局`;
-  renderSystem(`💥 ${data.winner} 踩中数字 ${data.number}，+1 分`);
-  if (data.game) renderScores(data.game.scores);
-  const win = $("chatWindow");
-  win.classList.remove("shake");
-  void win.offsetWidth;
-  win.classList.add("shake");
 }
 
 function handle(data) {
   if (data.type === "history") {
     $("chatLog").replaceChildren();
     for (const m of data.messages || []) renderChat(m);
-    renderGame(data.game);
-    if (me) {
-      $("bombStart").disabled = false;
-      $("bombGuess").disabled = false;
-    }
+    if (!data.messages?.length) $("chatLog").append(welcomeBlock());
     return;
   }
   if (data.type === "chat") {
-    renderChat(data.message);
+    renderChat(data.message, data.message.user === "小助手");
     if (!isOpen()) setUnread(unread + 1);
   }
   if (data.type === "system") renderSystem(data.text);
   if (data.type === "presence") {
     $("chatPresence").textContent = data.count ? `在线 ${data.count} 人` : "";
-  }
-  if (data.type === "bomb") {
-    if (data.event === "start" || data.event === "guess") renderGame(data.game, data.by);
-    if (data.event === "boom") renderBoom(data);
-    if (data.event === "error") $("bombStatus").textContent = data.text;
+    $("chatFabPill").hidden = !data.count;
+    $("chatFabPill").textContent = `${data.count} 人在线`;
   }
 }
 
+function sendChat(text) {
+  if (!text || !socket || socket.readyState !== 1) return;
+  socket.send(JSON.stringify({ type: "chat", text, ai: Boolean(me && $("aiToggle").checked) }));
+  // 游客消息不会被回显，本地补一条
+  if (!me) renderChat({ user: "我", text, ts: Date.now() });
+}
 $("chatForm").onsubmit = (e) => {
   e.preventDefault();
   const text = $("chatInput").value.trim();
-  if (!text || !socket || socket.readyState !== 1) return;
-  socket.send(JSON.stringify({ type: "chat", text, ai: Boolean(me && $("aiToggle").checked) }));
+  sendChat(text);
   $("chatInput").value = "";
-  // 游客消息不会被回显，本地补一条
-  if (!me) renderChat({ user: "我", text, ts: Date.now() });
-};
-$("bombStart").onclick = () => {
-  if (socket?.readyState === 1) socket.send(JSON.stringify({ type: "bomb-start" }));
-};
-$("bombGuess").onkeydown = (e) => {
-  if (e.key !== "Enter") return;
-  e.preventDefault();
-  const value = $("bombGuess").value.trim();
-  if (!value || !socket || socket.readyState !== 1) return;
-  socket.send(JSON.stringify({ type: "bomb-guess", value }));
-  $("bombGuess").value = "";
 };
