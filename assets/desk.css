@@ -65,8 +65,7 @@ h1, h2, p { margin: 0; }
 /* One shared header and a full-width daily note. */
 .topbar { position: sticky; top: 0; z-index: 10; min-height: 76px; padding: 12px var(--gutter); display: flex; align-items: center; gap: 16px; border-bottom: 1px solid var(--line); background: color-mix(in srgb, var(--bg) 94%, transparent); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
 .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; font-size: 19px; font-weight: 750; letter-spacing: -.6px; }
-.brand-mark { width: 36px; height: 36px; background: var(--accent); color: var(--on-accent); border-radius: 11px; display: grid; place-items: center; }
-.brand-mark .icon { width: 21px; height: 21px; stroke-width: 2; }
+.brand-mark { width: 36px; height: 36px; background: var(--accent); color: var(--on-accent); border-radius: 11px; display: grid; place-items: center; font-size: 24px; line-height: 1; font-weight: 800; }
 .topbar nav { display: flex; align-items: center; gap: 4px; margin-left: auto; font-size: 13px; }
 .topbar nav a { min-height: 40px; text-decoration: none; color: var(--muted); display: flex; align-items: center; gap: 5px; padding: 8px 15px; border-radius: 10px; font-weight: 550; }
 .topbar nav a:hover { color: var(--ink); background: var(--soft); }
@@ -281,7 +280,7 @@ dialog textarea:focus, dialog input:focus { border-color: var(--brand); outline:
   :root { --gutter: 16px; }
   .topbar { min-height: 64px; padding-block: 10px; gap: 8px; }
   .brand { font-size: 17px; gap: 8px; }
-  .brand-mark { width: 32px; height: 32px; border-radius: 9px; }
+  .brand-mark { width: 32px; height: 32px; font-size: 21px; border-radius: 9px; }
   .topbar nav { gap: 2px; font-size: 12px; }
   .topbar nav a { padding: 8px 10px; }
   .topbar nav a[href^="https://github.com"] { display: none; }
