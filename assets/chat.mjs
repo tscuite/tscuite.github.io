@@ -150,6 +150,12 @@ function handle(data) {
     $("chatPresence").textContent = data.count ? `在线 ${data.count} 人` : "";
     $("chatFabPill").hidden = !data.count;
     $("chatFabPill").textContent = `${data.count} 人在线`;
+    if (me?.isAdmin) {
+      const strip = $("chatIpStrip");
+      const clients = data.clients || [];
+      strip.hidden = !clients.length;
+      strip.replaceChildren(...clients.map((c) => el("span", null, `${c.name} · ${c.ip || "IP 未知"}${c.guest ? " · 游客" : ""}`)));
+    }
   }
 }
 
