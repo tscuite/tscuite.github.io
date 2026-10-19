@@ -1,17 +1,16 @@
 export const LANGUAGE_COLORS = { Python: "#3572a5", Rust: "#ba7747", TypeScript: "#3178c6", Go: "#008aab", "C++": "#d43770", HTML: "#d44c2e", JavaScript: "#b39700", Java: "#b07219", Kotlin: "#a97bff", Shell: "#619f27" };
-// 兼容两种格式：★/⭐，可带 "N. " 序号前缀
-export const REPO_LINE = /^\s*(?:\d{1,2}[.、]\s*)?([A-Za-z0-9][A-Za-z0-9_.-]*\/[A-Za-z0-9][A-Za-z0-9_.-]*)\s*[★⭐]\s*([\d,]+)\s*[・·]\s*(.+)$/;
+// 自动快照与粘贴榜单：兼容数字/emoji 序号、分隔符/括号语言及未标注语言。
+export const REPO_LINE = /^\s*(?:(?:\d{1,2}[.、]|(?:\d\uFE0F?\u20E3|🔟)+)\s*)?([A-Za-z0-9][A-Za-z0-9_.-]*\/[A-Za-z0-9][A-Za-z0-9_.-]*)\s*[★⭐]\s*(\d+(?:,\d{3})*)(?:\s*[・·]\s*(.+)|\s*[（(]([^（）()\r\n]+)[）)])?\s*$/;
 
-// ponytail: 兼容现有粘贴的精选格式，结构化后自动跳过 URL 与 "GitHub - " 来源行
-const SOURCE_LINE = /^(https?:\/\/|GitHub\s*-\s*)/i;
+const SOURCE_LINE = /^(?:🔗\s*)?(?:https?:\/\/|GitHub\s*-\s*)/i;
 export function parseRepositories(content) {
   const repos = [];
   for (const raw of String(content || "").split(/\r?\n/)) {
     const line = raw.trim();
     const match = line.match(REPO_LINE);
     if (match) {
-      repos.push({ name: match[1], stars: Number(match[2].replaceAll(",", "")), language: match[3], description: "", url: `https://github.com/${match[1]}` });
-    } else if (line && repos.length && !SOURCE_LINE.test(line) && !/^(数据来源|统计窗口|来源)[：:]/.test(line)) {
+      repos.push({ name: match[1], stars: Number(match[2].replaceAll(",", "")), language: (match[3] || match[4] || "").trim(), description: "", url: `https://github.com/${match[1]}` });
+    } else if (line && repos.length && !SOURCE_LINE.test(line) && !/^(数据(?:来)?源|统计窗口|来源)[：:]/.test(line)) {
       repos.at(-1).description += (repos.at(-1).description ? " " : "") + line;
     }
   }

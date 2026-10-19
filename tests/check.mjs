@@ -15,6 +15,32 @@ assert.equal(repos[1].description, "描述");
 assert.equal(repos[0].url, "https://github.com/owner/repo");
 assert.equal(parseRepositories("../redirect ★2・HTML").length, 0);
 
+const digest = parseRepositories(`📊 GitHub 近 7 日热门新项目（2026-10-19）
+数据来源：GitHub 官方 REST API
+1️⃣ feder-cr/git-ai ⭐2,297（Go）
+为 AI Agent 重新设计的 Git。
+🔗 GitHub - feder-cr/git-ai: Git designed for AI agents.
+🔟 Leonxlnx/earshot ⭐810（Python）
+给编码 Agent 装上耳朵。
+🔗 https://github.com/Leonxlnx/earshot
+1️⃣1️⃣ xscreensaver-official/xscreensaver ⭐863
+仓库原文明确否认官方身份，不应擅自改写。
+https://github.com/xscreensaver-official/xscreensaver
+1️⃣2️⃣ ahwootech/BRUTAL ⭐1899（C#）
+免费开源的 C# 游戏开发框架。
+来源：GitHub`);
+assert.deepEqual(digest.map(repo => repo.name), ["feder-cr/git-ai", "Leonxlnx/earshot", "xscreensaver-official/xscreensaver", "ahwootech/BRUTAL"]);
+assert.equal(digest[0].stars, 2297);
+assert.equal(digest[0].language, "Go");
+assert.equal(digest[0].description, "为 AI Agent 重新设计的 Git。");
+assert.equal(digest[1].description, "给编码 Agent 装上耳朵。");
+assert.equal(digest[2].language, "");
+assert.equal(digest[3].language, "C#");
+assert.equal(digest[3].description, "免费开源的 C# 游戏开发框架。");
+assert.equal(parseRepositories("  12. org/repo ⭐123 (C++)")[0].language, "C++");
+assert.equal(parseRepositories("org/repo ⭐123")[0].language, "");
+assert.equal(parseRepositories("org/repo ⭐,,,・Go").length, 0);
+
 const years = {
   "2026": [{ Name: "国庆节", StartDate: "2026-10-01", EndDate: "2026-10-07", CompDays: ["2026-09-20", "2026-10-10"] }],
   "2027": [{ Name: "元旦", StartDate: "2027-01-01", EndDate: "2027-01-03", CompDays: [] }],

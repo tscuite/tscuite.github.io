@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // 手动更新 GitHub 每日热门快照：node tools/trending.mjs
-// 触发 worker 拉取 GitHub Search API（近 7 天新建、按 Star、前 30），队列异步生成。
+// 触发 worker 拉取 GitHub Search API（近 7 日新建、按 Star、筛选后最多 20 个），队列分批生成中文快照。
 // 密钥从 ~/.agents/secrets.env 的 TRENDING_REFRESH_KEY 读取（只授权 trending 更新的专用密钥）。
 import { readFileSync } from "node:fs";
 import { createHmac, createHash, randomBytes } from "node:crypto";
@@ -35,4 +35,4 @@ if (!response.ok) {
   console.error("更新失败：", result.error || `HTTP ${response.status}`);
   process.exit(1);
 }
-console.log("已入队，约 20 秒后主页自动可见新快照。");
+console.log("更新任务已入队；中文快照生成成功后首页可见，失败时保留旧快照。");
