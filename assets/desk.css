@@ -250,7 +250,7 @@ dialog textarea:focus, dialog input:focus { border-color: var(--brand); outline:
 .chat-form .primary { flex-shrink: 0; padding: 9px 16px; }
 
 /* Tablet and phone: tools condense; project names no longer fight metadata. */
-@media (min-width: 981px) and (min-height: 820px) {
+@media (min-width: 981px) {
   .life { position: sticky; top: 100px; }
 }
 @media (max-width: 1180px) {
