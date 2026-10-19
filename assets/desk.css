@@ -137,18 +137,18 @@ h1, h2, p { margin: 0; }
 .scroll-actions { display: flex; align-items: center; gap: 4px; }
 .scroll-actions .icon-button { border: 1px solid var(--line); font-size: 20px; }
 .project-grid { display: block; margin-top: 20px; border-top: 1px solid var(--line); }
-.repo { display: grid; grid-template-columns: 28px minmax(0, 1fr) 146px; gap: 12px; align-items: start; padding: 18px 4px; border-bottom: 1px solid var(--line); text-decoration: none; background: transparent; }
+.repo { display: grid; grid-template-columns: 28px minmax(0, 1fr) 146px; gap: 12px; align-items: center; min-height: 46px; padding: 8px 4px; border-bottom: 1px solid var(--line); text-decoration: none; background: transparent; }
 .repo:last-child { border-bottom: 0; }
 .repo:hover, .repo:focus-visible { background: var(--soft); }
-.repo-rank { color: var(--faint); font-size: 12px; line-height: 24px; font-weight: 550; font-variant-numeric: tabular-nums; text-align: center; }
+.repo-rank { color: var(--faint); font-size: 12px; font-weight: 550; font-variant-numeric: tabular-nums; text-align: center; }
 .repo:nth-child(-n+3) .repo-rank { color: var(--brand); font-weight: 750; }
-.repo-heading { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
-.repo-identity { min-width: 0; overflow-wrap: anywhere; font-size: 15px; }
-.repo-owner { color: var(--muted); font-size: 13px; }
+.repo-heading { display: flex; align-items: baseline; gap: 14px; min-width: 0; }
+.repo-identity { min-width: 0; max-width: 62%; flex: 0 1 auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; }
+.repo-owner { color: var(--muted); font-size: 12px; }
 .repo-name { color: var(--ink); font-weight: 650; letter-spacing: -.15px; }
 .repo:hover .repo-name { color: var(--brand); }
-.repo-description { color: var(--muted); font-size: 14px; line-height: 1.8; overflow-wrap: anywhere; }
-.repo-meta { display: flex; align-items: center; justify-content: flex-end; gap: 14px; min-width: 0; line-height: 24px; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.repo-desc-inline { color: var(--muted); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex: 1; }
+.repo-meta { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
 .repo-language { display: inline-flex; align-items: center; gap: 6px; min-width: 0; }
 .repo-language > span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .lang-dot { height: 6px; width: 6px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
@@ -257,6 +257,9 @@ dialog textarea:focus, dialog input:focus { border-color: var(--brand); outline:
   .desktop { grid-template-columns: minmax(0, 1fr) 260px; gap: 18px; }
   .projects { padding: 22px 18px 16px; }
   .repo { grid-template-columns: 24px minmax(0, 1fr) 132px; gap: 10px; }
+  .repo-heading { flex-direction: column; align-items: stretch; gap: 2px; }
+  .repo-identity { max-width: 100%; }
+  .repo-desc-inline { flex: auto; }
   .meal { padding-inline: 18px; }
   .rest-card, .weather-card { padding-inline: 16px; }
 }
@@ -319,9 +322,13 @@ dialog textarea:focus, dialog input:focus { border-color: var(--brand); outline:
   .section-symbol, .section-symbol .icon { width: 22px; height: 22px; }
   .projects-heading p { font-size: 11px; line-height: 1.7; }
   .project-grid { margin-top: 16px; }
-  .repo { grid-template-columns: 22px minmax(0, 1fr); gap: 6px 8px; padding: 16px 0; }
-  .repo-rank { line-height: 24px; }
-  .repo-meta { grid-column: 2; justify-content: flex-start; gap: 16px; }
+  .repo { grid-template-columns: 22px minmax(0, 1fr); align-items: start; gap: 5px 8px; padding: 12px 0; }
+  .repo-rank { line-height: 22px; }
+  .repo-heading { gap: 4px; }
+  .repo-identity { font-size: 14px; white-space: normal; overflow-wrap: anywhere; }
+  .repo-owner { font-size: 12px; }
+  .repo-desc-inline { font-size: 12px; }
+  .repo-meta { grid-column: 2; justify-content: flex-start; gap: 16px; font-size: 11px; }
   .repo-stars { min-width: 0; }
   .projects-footer span:last-child { display: none; }
   .projects-footer { font-size: 10px; }

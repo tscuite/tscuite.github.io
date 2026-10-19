@@ -127,6 +127,11 @@ function contrast(a, b) {
   return (high + .05) / (low + .05);
 }
 const css = readFileSync(new URL("../assets/desk.css", import.meta.url), "utf8");
+const desk = readFileSync(new URL("../assets/desk.mjs", import.meta.url), "utf8");
+const home = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+assert(desk.includes('element("span", "repo-desc-inline", repo.description'), "数据更新保留原有内联简介");
+assert.match(css, /\.repo-desc-inline \{[^}]*white-space: nowrap;[^}]*text-overflow: ellipsis;/, "保留紧凑单行列表");
+assert(!home.includes('id="digestSource"'), "不因数据更新增加标题区块");
 for (const selector of [":root", ":root[data-theme=dark]"]) {
   const block = css.slice(css.indexOf(selector)).split("}")[0];
   const colors = Object.fromEntries([...block.matchAll(/--([\w-]+):\s*(#[a-f\d]{6});/gi)].map(match => [match[1], match[2]]));

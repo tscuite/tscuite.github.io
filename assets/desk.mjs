@@ -275,11 +275,10 @@ function renderRepositories() {
     link.title = `${repo.name}：${repo.description || "暂无描述"}`;
     const heading = element("div", "repo-heading"), identity = element("div", "repo-identity");
     identity.append(element("span", "repo-owner", `${owner} / `), element("span", "repo-name", name));
-    heading.append(identity, element("p", "repo-description", repo.description || "暂无描述"));
+    heading.append(identity, element("span", "repo-desc-inline", repo.description || "暂无描述"));
     const meta = element("div", "repo-meta"), language = element("span", "repo-language"), dot = element("span", "lang-dot");
     dot.style.background = LANGUAGE_COLORS[repo.language] || "#74819c";
-    language.append(dot, element("span", "", repo.language));
-    language.hidden = !repo.language || repo.language === "Other";
+    language.append(dot, element("span", "", repo.language || "Other"));
     const stars = element("span", "repo-stars");
     stars.setAttribute("role", "img");
     stars.setAttribute("aria-label", `${repo.stars.toLocaleString("en-US")} stars`);
@@ -290,10 +289,10 @@ function renderRepositories() {
   }
   $("repoGrid").replaceChildren(fragment);
   $("repoGrid").setAttribute("aria-busy", "false");
-  $("projectsTitle").textContent = "GitHub 近 7 日热门新项目";
+  $("projectsTitle").textContent = repos.length ? `GitHub Top ${repos.length} Stars` : "GitHub Top Stars";
   $("projectMessage").hidden = repos.length > 0;
   $("projectMessage").textContent = "还没有公开的项目快照。";
-  $("repoCount").textContent = repos.length ? `${repos.length} 个项目 · 按 Star 排序` : "GitHub Search API 数据快照";
+  $("repoCount").textContent = repos.length ? `${repos.length} 个项目 · 每日更新` : "GitHub Search API 数据快照";
 }
 function renderNote(item) {
   const article = element("article", "note");
@@ -315,8 +314,7 @@ function renderItems() {
   const latest = entries.find(isTrending);
   repos = latest ? parseRepositories(latest.content).map((repo, index) => ({ ...repo, rank: index + 1 })) : [];
   const date = latest?.subject?.match(/\d{4}-\d{2}-\d{2}/)?.[0] || String(latest?.created_at || "").slice(0, 10);
-  $("digestInfo").textContent = latest ? `${date} 快照 · 近 7 日新建 · 按 Star 排序` : "近 7 日新创建的项目，按 Star 排序。";
-  $("digestSource").textContent = String(latest?.content || "").split(/\r?\n/).find(line => /^数据(?:来)?源[：:]/.test(line.trim()))?.trim() || "数据来源：GitHub 官方 REST API。";
+  $("digestInfo").textContent = latest ? `${date} 快照 · 近 7 天新建 · 按 Star 排序` : "近 7 天新创建的项目，按 Star 排序。";
   renderRepositories();
   const notes = entries.filter(item => !isTrending(item));
   $("feed").replaceChildren(...notes.map(renderNote));
